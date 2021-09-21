@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>header title</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<meta http-equiv="Pragma" content="no-cache">
+		<meta http-equiv="Cache-Control" content="no-cache">
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700,800&display=swap" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css?family=Prata&display=swap" rel="stylesheet">
+		<link rel="stylesheet" href="static/css/open-iconic-bootstrap.min.css">
+		<link rel="stylesheet" href="static/css/animate.css">
+		<link rel="stylesheet" href="static/css/owl.carousel.min.css">
+		<link rel="stylesheet" href="static/css/owl.theme.default.min.css">
+		<link rel="stylesheet" href="static/css/magnific-popup.css">
+		<link rel="stylesheet" href="static/css/aos.css">
+		<link rel="stylesheet" href="static/css/ionicons.min.css">
+		<link rel="stylesheet" href="static/css/bootstrap-datetimepicker.min.css">
+<!--
+		<link rel="stylesheet" href="static/css/nouislider.css">
+-->
+		<link rel="stylesheet" href="static/css/flaticon.css">
+		<link rel="stylesheet" href="static/css/icomoon.css">
+		<link rel="stylesheet" href="static/css/style.css">
+		<style>
+			.progress{
+				background-color:#38cd8b!important;
+			}
+			.bg-primary{
+				background-color:gray!important;
+			}
+			@media (max-width: 991.98px){
+				.ftco-navbar-light {
+					padding: 0px!important;
+				}
+			}
+			.qr-img{
+				min-width: 160px;
+				min-height: 160px;
+				max-width: 160px;
+				max-height: 160px;
+				margin: 10px;
+			}
+			.modal{
+				display: none;
+				height: 100vh;
+				position: fixed;
+				top: 0;
+				width: 100%;
+			}
+			.modal__bg{
+				background: rgba(0,0,0,0.8);
+				height: 100vh;
+				position: absolute;
+				width: 100%;
+			}
+			.modal__content{
+				text-align: center;
+				background: #fff;
+				left: 50%;
+				padding: 40px;
+				position: absolute;
+				top: 50%;
+				transform: translate(-50%,-50%);
+				width: 350px;
+			}
+		</style>
+	</head>
+	<body>
+
+		<div class="modal js-modal">
+			<div class="modal__bg"></div>
+			<div class="modal__content">
+				<div>
+					<div id="invTxt" style="word-break: break-all; text-align:left; font-size:14px;"></div>
+					<img src="static/img/copy.png" id="cpImg" style="margin-top:10px;cursor:pointer;">
+				</div>
+				<div>
+					<img src="" id="qrImg" class="qr-img">
+				</div>
+				<div>
+					<a class="js-modal-close" href="">CANCEL</a>
+				</div>
+			</div>
+		</div>
+
+		<div class="main-section" id="main-area">
+			<nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light scrolled awake" id="ftco-navbar">
+				<div class="container">
+					<div class="navbar-brand">site title</div>
+				</div>
+			</nav>
+
+			<section class="ftco-section" id="typography">
+				<div class="container">
+					<div class="row">
+						<div class="col-md-12">
+							<h2 class="heading-section mb-4">Node Info</h2>
+							<div class="typo">
+								<h2><span class="typo-note">Alias</span><div id="alias" style="word-break: break-all;">0</div></h2>
+							</div>
+							<div class="typo">
+								<h6><span class="typo-note">Public Key</span><div id="pkey" style="word-break: break-all;">0</div></h6>
+							</div>
+							<div class="typo">
+								<h2><span class="typo-note">Channels</span><div id="channelSum">0</div></h2>
+							</div>
+							<div class="typo">
+								<h2><span class="typo-note">Capacity</span><div id="capacitySum">0</div></h2>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="ftco-section" id="progressbar">
+				<div class="container">
+					<div class="row">
+						<div class="col-md-12">
+							<h2 class="heading-section mb-5">Channels</h2>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-12" id="channelList">
+
+
+<!--
+							<div class="w-100">
+								<h6>tippin.me</h6><br>
+								<div class="progress mb-4" style="height: 4px;">
+									<div class="progress-bar bg-primary" role="progressbar" style="width: 80%" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"><span class="tip">80%</span></div>
+								</div>
+							</div>
+							<div class="w-100">
+								<h6>OpenNode</h6><br>
+								<div class="progress mb-4" style="height: 4px;">
+									<div class="progress-bar bg-primary" role="progressbar" style="width: 45%" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"><span class="tip">45%</span></div>
+								</div>
+							</div>
+						</div>
+-->
+					</div>
+				</div>
+			</section>
+
+			<footer class="ftco-section ftco-section-2">
+				<div class="col-md-12 text-center">
+					<p class="mb-0">
+						<!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
+						Copyright &copy;<script>
+							document.write(new Date().getFullYear());
+
+						</script> All rights reserved | This template is made with <i class="icon-heart" aria-hidden="true"></i> by <a href="https://colorlib.com" target="_blank">Colorlib</a>
+						<!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
+					</p>
+				</div>
+			</footer>
+		</div>
+
+		<!-- loader -->
+		<div id="ftco-loader" class="show fullscreen"><svg class="circular" width="48px" height="48px"><circle class="path-bg" cx="24" cy="24" r="22" fill="none" stroke-width="4" stroke="#eeeeee"/><circle class="path" cx="24" cy="24" r="22" fill="none" stroke-width="4" stroke-miterlimit="10" stroke="#F96D00"/></svg></div>
+
+	<script src="static/js/jquery.min.js"></script>
+	<script src="static/js/jquery-migrate-3.0.1.min.js"></script>
+<!--
+	<script src="static/js/popper.min.js"></script>
+-->
+	<script src="static/js/bootstrap.min.js"></script>
+	<script src="static/js/jquery.easing.1.3.js"></script>
+	<script src="static/js/jquery.waypoints.min.js"></script>
+	<script src="static/js/jquery.stellar.min.js"></script>
+	<script src="static/js/owl.carousel.min.js"></script>
+	<script src="static/js/jquery.magnific-popup.min.js"></script>
+	<script src="static/js/aos.js"></script>
+<!--
+	<script src="static/js/nouislider.min.js"></script>
+-->
+	<script src="static/js/moment-with-locales.min.js"></script>
+	<script src="static/js/bootstrap-datetimepicker.min.js"></script>
+	<script src="static/js/main.js"></script>
+	<script>
+		var paymentHash = "";
+		var publicKey = "";
+		var bodyIndex = "";
+		var timer;
+
+		function select_all(el) {
+			if (typeof window.getSelection != "undefined" && typeof document.createRange != "undefined") {
+				var range = document.createRange();
+				range.selectNodeContents(el);
+				var sel = window.getSelection();
+				sel.removeAllRanges();
+				sel.addRange(range);
+			} else if (typeof document.selection != "undefined" && typeof document.body.createTextRange != "undefined") {
+				var textRange = document.body.createTextRange();
+				textRange.moveToElementText(el);
+				textRange.select();
+			}
+		}
+
+
+		function createInvoice(sats, pKey, bdyIdx){
+			paymentHash = "";
+			publicKey = "";
+			bodyIndex = "";
+			$('#ftco-loader').addClass('show');
+
+			$.get('/invoice/' + sats + '/DiamondHandsProto')
+				.done(function( data ) {
+					//console.log(data.bolt11);
+					$('#ftco-loader').removeClass('show');
+					$('.js-modal').fadeIn();
+
+					paymentHash = data.payment_hash;
+					publicKey = pKey;
+					bodyIndex = bdyIdx;
+
+					$('#invTxt').text(data.bolt11);
+					$('#qrImg').attr("src", data.qr_str);
+					
+					timer = setInterval(requestStatus, 4000);
+				})
+				.fail(function( errorThrown ) {
+					$('#ftco-loader').removeClass('show');
+				})
+			;
+		}
+        
+		function requestStatus(){
+			if(paymentHash != ""){
+				$.get('/req_d/' + paymentHash + '/' + publicKey + '/' + bodyIndex)
+					.done(function(data){
+						//console.log(data);
+						if(data != ""){
+							clearInterval(timer);
+							$('.js-modal').fadeOut();
+							var remoteShare = 0;
+							var localShare = 0;
+							if(data != "ERROR"){
+								remoteShare = parseInt(Math.round((data.remote_balance / data.capacity) * 100))
+								localShare = parseInt(Math.round((data.local_balance / data.capacity) * 100))
+								$('#remoteBal_' + data.body_index).text("Remote:" + data.remote_balance);
+								$('#localBal_' + data.body_index).text("Local:" + data.local_balance);
+								$('#bodyBtn_' + data.body_index).hide();
+								//console.log(remoteShare)
+								//console.log(localShare)
+								$('#barRemote_' + data.body_index).attr("aria-valuenow", remoteShare);
+								$('#barRemote_' + data.body_index).attr("style","background-color:#6b48ff!important; width:" + remoteShare + "%");
+							}
+						}
+				});
+			}
+		}
+
+
+		$('#cpImg').on('click', function() {
+			var copyText = document.getElementById("invTxt");
+			var textArea = document.createElement("textarea");
+			textArea.value = copyText.textContent;
+			document.body.appendChild(textArea);
+			textArea.select();
+			document.execCommand("Copy");
+			textArea.remove();
+			select_all($('#invTxt')[0]);
+		});
+
+		$.get('/req_a')
+			.done(function(data1){
+				//console.log(data1);
+				$('#alias').text(data1.alias);
+				$('#pkey').text(data1.public_key);
+		});
+
+		//$.get('/req_b')
+		//	.done(function(data2){
+		//		//console.log(data2);
+		//});
+
+		$.get('/req_c')
+			.done(function(data3){
+				//console.log(data3);
+				var capacity = 0;
+				var channels = Object.keys(data3).length;
+				for(var i=0; i<channels; i++){
+					capacity += data3[i].capacity;
+					$('#channelList').append("<div class='w-100'><h6 style='word-break: break-all;'>" + data3[i].remote_pubkey + "</h6>\
+					<div class='row'><div class='col-md-4'></div><div class='col-md-4' style='text-align:center;'>" + data3[i].capacity + " sats</div><div class='col-md-4' style='text-align:right;'></div></div>\
+					<a href='https://1ml.com/testnet/node/" + data3[i].remote_pubkey + "' target='_blank'>\
+					<div class='progress mb-4' id='barAll_" + i + "' style='margin-bottom:0.3rem !important'>\
+					<div class='progress-bar bg-primary' id='barRemote_" + i + "' role='progressbar' style='width: 100%' aria-valuenow='100' aria-valuemin='0' aria-valuemax='100'></div>\
+					</div></a></div>\
+					<div style='text-align:center;'><button type='button' class='btn btn-secondary' id='bodyBtn_" + i + "'>balance</button></div>\
+					<div class='row'><div class='col-md-6'><div id='remoteBal_" + i + "'></div></div><div class='col-md-6' style='text-align:right;'><div id='localBal_" + i + "'></div></div></div>\
+					<input type='hidden' id='keys_" + i + "' value='" + 10 + "," + data3[i].remote_pubkey + "," + i + "'><br>");
+				}
+				$('#channelSum').text(channels);
+				$('#capacitySum').text(capacity);
+
+			$('button[id^="bodyBtn_"]').on('click', function() {
+				var keyStr = $('#keys_' + this.id.split("_")[1]).val();
+				createInvoice(keyStr.split(",")[0], keyStr.split(",")[1], keyStr.split(",")[2]);
+			});
+		});
+
+		$(function(){
+			$('.js-modal-close').on('click',function(){
+				$('.js-modal').fadeOut();
+				clearInterval(timer);
+				return false;
+			});
+		});
+
+	</script>
+	</body>
+</html>

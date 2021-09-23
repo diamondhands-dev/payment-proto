@@ -163,33 +163,33 @@
 	$('[data-toggle="popover"]').popover()
 	$('[data-toggle="tooltip"]').tooltip()
 
-	$('#id_0').datetimepicker({
-    allowInputToggle: true,
-    showClose: true,
-    showClear: true,
-    showTodayButton: true,
-    format: "MM/DD/YYYY hh:mm:ss A",
-    icons: {
-		  time:'ion-ios-time',
-
-		  date:'icon-calendar',
-
-		  up:'ion-ios-arrow-up',
-
-		  down:'ion-ios-arrow-down',
-
-		  previous:'ion-ios-arrow-back',
-
-		  next:'ion-ios-arrow-forward',
-
-		  today:'ion-ios-arrow-up',
-
-		  clear:'ion-ios-trash',
-
-		  close:'ion-ios-close'
-		},
-
-	});
+	//$('#id_0').datetimepicker({
+    //allowInputToggle: true,
+    //showClose: true,
+    //showClear: true,
+    //showTodayButton: true,
+    //format: "MM/DD/YYYY hh:mm:ss A",
+    //icons: {
+	//	  time:'ion-ios-time',
+    //
+	//	  date:'icon-calendar',
+    //
+	//	  up:'ion-ios-arrow-up',
+    //
+	//	  down:'ion-ios-arrow-down',
+    //
+	//	  previous:'ion-ios-arrow-back',
+    //
+	//	  next:'ion-ios-arrow-forward',
+    //
+	//	  today:'ion-ios-arrow-up',
+    //
+	//	  clear:'ion-ios-trash',
+    //
+	//	  close:'ion-ios-close'
+	//	},
+    //
+	//});
 
 
 })(jQuery);

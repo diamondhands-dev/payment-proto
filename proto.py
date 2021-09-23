@@ -88,33 +88,41 @@ def req_a():
 def req_b():
     print('requesting req_b...')
 
-    request = ln.ChannelGraphRequest()
-    response = stub.DescribeGraph(request)
-
-    return str(response)
-
-
-@app.route('/req_c')
-def req_c():
-    print('requesting req_c...')
-
     request = ln.ListChannelsRequest()
     response = stub.ListChannels(request)
 
-    req_c = {}
+    req_b = {}
     for i in range(len(response.channels)):
-        req_c[i] = {
+        request2 = ln.NodeInfoRequest(
+            pub_key = response.channels[i].remote_pubkey,
+            include_channels = False,
+        )
+        response2 = stub.GetNodeInfo(request2)
+
+        request3 = ln.ChanInfoRequest(
+            chan_id = response.channels[i].chan_id,
+        )
+        response3 = stub.GetChanInfo(request3)
+
+        req_b[i] = {
+            "alias": response2.node.alias,
             "capacity": response.channels[i].capacity,
             "remote_pubkey": response.channels[i].remote_pubkey,
+            "node1_pkey": response3.node1_pub,
+            "node1_base_fee": response3.node1_policy.fee_base_msat,
+            "node1_fee_rate": response3.node1_policy.fee_rate_milli_msat,
+            "node2_pkey": response3.node2_pub,
+            "node2_base_fee": response3.node2_policy.fee_base_msat,
+            "node2_fee_rate": response3.node2_policy.fee_rate_milli_msat,
         }
 
-    return req_c
+    return req_b
     #return str(response)
 
 
-@app.route('/req_d/<payment_hash>/<public_key>/<body_index>')
-def req_d(payment_hash, public_key, body_index):
-    print('requesting req_d...')
+@app.route('/req_c/<payment_hash>/<public_key>/<body_index>')
+def req_c(payment_hash, public_key, body_index):
+    print('requesting req_c...')
 
     request = ln.PaymentHash(
         r_hash_str = payment_hash,
@@ -129,13 +137,13 @@ def req_d(payment_hash, public_key, body_index):
 
             for i in range(len(response2.channels)):
                 if(response2.channels[i].remote_pubkey == public_key):
-                    req_d = {
+                    req_c = {
                         "capacity": response2.channels[i].capacity,
                         "local_balance": response2.channels[i].local_balance,
                         "remote_balance": response2.channels[i].remote_balance,
                         "body_index": body_index,
                     }
-                    return req_d
+                    return req_c
         
             return "ERROR"
         else:

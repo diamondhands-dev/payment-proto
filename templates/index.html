@@ -10,13 +10,15 @@
 		<link href="https://fonts.googleapis.com/css?family=Prata&display=swap" rel="stylesheet">
 		<link rel="stylesheet" href="static/css/open-iconic-bootstrap.min.css">
 		<link rel="stylesheet" href="static/css/animate.css">
+<!--
 		<link rel="stylesheet" href="static/css/owl.carousel.min.css">
 		<link rel="stylesheet" href="static/css/owl.theme.default.min.css">
 		<link rel="stylesheet" href="static/css/magnific-popup.css">
+-->
 		<link rel="stylesheet" href="static/css/aos.css">
 		<link rel="stylesheet" href="static/css/ionicons.min.css">
-		<link rel="stylesheet" href="static/css/bootstrap-datetimepicker.min.css">
 <!--
+		<link rel="stylesheet" href="static/css/bootstrap-datetimepicker.min.css">
 		<link rel="stylesheet" href="static/css/nouislider.css">
 -->
 		<link rel="stylesheet" href="static/css/flaticon.css">
@@ -97,10 +99,10 @@
 						<div class="col-md-12">
 							<h2 class="heading-section mb-4">Node Info</h2>
 							<div class="typo">
-								<h2><span class="typo-note">Alias</span><div id="alias" style="word-break: break-all;">0</div></h2>
+								<h2><span class="typo-note">Alias</span><div id="ownAlias" style="word-break: break-all;">0</div></h2>
 							</div>
 							<div class="typo">
-								<h6><span class="typo-note">Public Key</span><div id="pkey" style="word-break: break-all;">0</div></h6>
+								<h6><span class="typo-note">Public Key</span><div id="ownPkey" style="word-break: break-all;">0</div></h6>
 							</div>
 							<div class="typo">
 								<h2><span class="typo-note">Channels</span><div id="channelSum">0</div></h2>
@@ -122,23 +124,6 @@
 					</div>
 					<div class="row">
 						<div class="col-md-12" id="channelList">
-
-
-<!--
-							<div class="w-100">
-								<h6>tippin.me</h6><br>
-								<div class="progress mb-4" style="height: 4px;">
-									<div class="progress-bar bg-primary" role="progressbar" style="width: 80%" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"><span class="tip">80%</span></div>
-								</div>
-							</div>
-							<div class="w-100">
-								<h6>OpenNode</h6><br>
-								<div class="progress mb-4" style="height: 4px;">
-									<div class="progress-bar bg-primary" role="progressbar" style="width: 45%" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"><span class="tip">45%</span></div>
-								</div>
-							</div>
-						</div>
--->
 					</div>
 				</div>
 			</section>
@@ -166,17 +151,23 @@
 	<script src="static/js/popper.min.js"></script>
 -->
 	<script src="static/js/bootstrap.min.js"></script>
+<!--
 	<script src="static/js/jquery.easing.1.3.js"></script>
+-->
 	<script src="static/js/jquery.waypoints.min.js"></script>
 	<script src="static/js/jquery.stellar.min.js"></script>
+<!--
 	<script src="static/js/owl.carousel.min.js"></script>
 	<script src="static/js/jquery.magnific-popup.min.js"></script>
+-->
 	<script src="static/js/aos.js"></script>
 <!--
 	<script src="static/js/nouislider.min.js"></script>
 -->
 	<script src="static/js/moment-with-locales.min.js"></script>
+<!--
 	<script src="static/js/bootstrap-datetimepicker.min.js"></script>
+-->
 	<script src="static/js/main.js"></script>
 	<script>
 		var paymentHash = "";
@@ -228,7 +219,7 @@
         
 		function requestStatus(){
 			if(paymentHash != ""){
-				$.get('/req_d/' + paymentHash + '/' + publicKey + '/' + bodyIndex)
+				$.get('/req_c/' + paymentHash + '/' + publicKey + '/' + bodyIndex)
 					.done(function(data){
 						//console.log(data);
 						if(data != ""){
@@ -267,24 +258,31 @@
 		$.get('/req_a')
 			.done(function(data1){
 				//console.log(data1);
-				$('#alias').text(data1.alias);
-				$('#pkey').text(data1.public_key);
+				$('#ownAlias').text(data1.alias);
+				$('#ownPkey').text(data1.public_key);
 		});
 
-		//$.get('/req_b')
-		//	.done(function(data2){
-		//		//console.log(data2);
-		//});
-
-		$.get('/req_c')
+		$.get('/req_b')
 			.done(function(data3){
 				//console.log(data3);
 				var capacity = 0;
 				var channels = Object.keys(data3).length;
 				for(var i=0; i<channels; i++){
 					capacity += data3[i].capacity;
-					$('#channelList').append("<div class='w-100'><h6 style='word-break: break-all;'>" + data3[i].remote_pubkey + "</h6>\
-					<div class='row'><div class='col-md-4'></div><div class='col-md-4' style='text-align:center;'>" + data3[i].capacity + " sats</div><div class='col-md-4' style='text-align:right;'></div></div>\
+					var remoteFeeRate = 0;
+					var localFeeRate = 0;
+					if(data3[i].node1_pkey == data3[i].remote_pubkey){
+						localFeeRate = data3[i].node2_fee_rate;
+						remoteFeeRate = data3[i].node1_fee_rate;
+					}else if(data3[i].node2_pkey == data3[i].remote_pubkey){
+						localFeeRate = data3[i].node1_fee_rate;
+						remoteFeeRate = data3[i].node2_fee_rate;
+					}else{
+						console.log("ERROR");
+					}
+
+					$('#channelList').append("<div class='w-100'><h5 style='word-break: break-all;'>" + data3[i].alias + "</h5><h6 style='word-break: break-all;'>" + data3[i].remote_pubkey + "</h6>\
+					<div class='row'  style='flex-wrap:unset;'><div class='col-md-4'>rate " + remoteFeeRate + " ppm</div><div class='col-md-4' style='text-align:center;'>" + data3[i].capacity + " sats</div><div class='col-md-4' style='text-align:right;'>rate " + localFeeRate + " ppm</div></div>\
 					<a href='https://1ml.com/testnet/node/" + data3[i].remote_pubkey + "' target='_blank'>\
 					<div class='progress mb-4' id='barAll_" + i + "' style='margin-bottom:0.3rem !important'>\
 					<div class='progress-bar bg-primary' id='barRemote_" + i + "' role='progressbar' style='width: 100%' aria-valuenow='100' aria-valuemin='0' aria-valuemax='100'></div>\

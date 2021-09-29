@@ -243,6 +243,13 @@
 			}
 		}
 
+		function sat2btc(val){
+			return parseFloat((val * 1e-8).toFixed(8));
+		}
+
+		function btc2sat(val){
+			return Math.round(val * 1e8);
+		}
 
 		$('#cpImg').on('click', function() {
 			var copyText = document.getElementById("invTxt");
@@ -292,7 +299,7 @@
 					<input type='hidden' id='keys_" + i + "' value='" + 10 + "," + data3[i].remote_pubkey + "," + i + "'><br>");
 				}
 				$('#channelSum').text(channels);
-				$('#capacitySum').text(capacity);
+				$('#capacitySum').text(sat2btc(capacity) + " BTC");
 
 			$('button[id^="bodyBtn_"]').on('click', function() {
 				var keyStr = $('#keys_' + this.id.split("_")[1]).val();
@@ -307,6 +314,7 @@
 				return false;
 			});
 		});
+
 
 	</script>
 	</body>

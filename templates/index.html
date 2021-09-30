@@ -193,13 +193,13 @@
 		}
 
 
-		function createInvoice(sats, pKey, bdyIdx){
+		function createInvoice(pKey, bdyIdx){
 			paymentHash = "";
 			publicKey = "";
 			bodyIndex = "";
 			$('#ftco-loader').addClass('show');
 
-			$.get('/invoice/' + sats + '/DiamondHandsProto')
+			$.get('/invoice')
 				.done(function( data ) {
 					//console.log(data.bolt11);
 					$('#ftco-loader').removeClass('show');
@@ -268,7 +268,6 @@
 		$.get('/req_a')
 			.done(function(data1){
 				//console.log(data1);
-				mainTitle
 				$('#headerTitle').text(data1.alias + " LN Explorer");
 				$('#mainTitle').text(data1.alias + " LN Explorer");
 				$('#ownAlias').text(data1.alias);
@@ -278,7 +277,6 @@
 		$.get('/req_b')
 			.done(function(data3){
 				//console.log(data3);
-				var sats = 0;
 				var capacity = 0;
 				var channels = Object.keys(data3).length;
 				for(var i=0; i<channels; i++){
@@ -295,7 +293,6 @@
 						console.log("ERROR");
 					}
 
-					sats = 1500;
 					$('#channelList').append("<div class='w-100'><h5 style='word-break: break-all;'>" + data3[i].alias + "</h5><h6 style='word-break: break-all;'>" + data3[i].remote_pubkey + "</h6>\
 					<div class='row'  style='flex-wrap:unset;'><div class='col-md-4'>rate " + remoteFeeRate + " ppm</div><div class='col-md-4' style='text-align:center;'>" + data3[i].capacity + " sats</div><div class='col-md-4' style='text-align:right;'>rate " + localFeeRate + " ppm</div></div>\
 					<a href='https://1ml.com/node/" + data3[i].remote_pubkey + "' target='_blank'>\
@@ -304,14 +301,14 @@
 					</div></a></div>\
 					<div style='text-align:center;'><button type='button' class='btn btn-secondary' id='bodyBtn_" + i + "'>balance</button></div>\
 					<div class='row'><div class='col-md-6'><div id='remoteBal_" + i + "'></div></div><div class='col-md-6' style='text-align:right;'><div id='localBal_" + i + "'></div></div></div>\
-					<input type='hidden' id='keys_" + i + "' value='" + sats + "," + data3[i].remote_pubkey + "," + i + "'><br>");
+					<input type='hidden' id='keys_" + i + "' value='" + data3[i].remote_pubkey + "," + i + "'><br>");
 				}
 				$('#channelSum').text(channels);
 				$('#capacitySum').text(sat2btc(capacity) + " BTC");
 
 			$('button[id^="bodyBtn_"]').on('click', function() {
 				var keyStr = $('#keys_' + this.id.split("_")[1]).val();
-				createInvoice(keyStr.split(",")[0], keyStr.split(",")[1], keyStr.split(",")[2]);
+				createInvoice(keyStr.split(",")[0], keyStr.split(",")[1]);
 			});
 		});
 

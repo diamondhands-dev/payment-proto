@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>header title</title>
+		<title id="headerTitle"></title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 		<meta http-equiv="Pragma" content="no-cache">
@@ -25,6 +25,9 @@
 		<link rel="stylesheet" href="static/css/icomoon.css">
 		<link rel="stylesheet" href="static/css/style.css">
 		<style>
+			.navbar-brand{
+				display:flex!important;
+			}
 			.progress{
 				background-color:#38cd8b!important;
 			}
@@ -89,7 +92,7 @@
 		<div class="main-section" id="main-area">
 			<nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light scrolled awake" id="ftco-navbar">
 				<div class="container">
-					<div class="navbar-brand"><img src="static/img/DHLogo.png" style="width:62px; height:42px;">&nbsp;&nbsp;&nbsp;site title</div>
+					<div class="navbar-brand"><img src="static/img/DHLogo.png" style="width:62px; height:42px;">&nbsp;&nbsp;&nbsp;<div id="mainTitle"></div></div>
 				</div>
 			</nav>
 
@@ -265,6 +268,9 @@
 		$.get('/req_a')
 			.done(function(data1){
 				//console.log(data1);
+				mainTitle
+				$('#headerTitle').text(data1.alias + " LN Explorer");
+				$('#mainTitle').text(data1.alias + " LN Explorer");
 				$('#ownAlias').text(data1.alias);
 				$('#ownPkey').text(data1.public_key);
 		});
@@ -272,6 +278,7 @@
 		$.get('/req_b')
 			.done(function(data3){
 				//console.log(data3);
+				var sats = 0;
 				var capacity = 0;
 				var channels = Object.keys(data3).length;
 				for(var i=0; i<channels; i++){
@@ -288,15 +295,16 @@
 						console.log("ERROR");
 					}
 
+					sats = 1500;
 					$('#channelList').append("<div class='w-100'><h5 style='word-break: break-all;'>" + data3[i].alias + "</h5><h6 style='word-break: break-all;'>" + data3[i].remote_pubkey + "</h6>\
 					<div class='row'  style='flex-wrap:unset;'><div class='col-md-4'>rate " + remoteFeeRate + " ppm</div><div class='col-md-4' style='text-align:center;'>" + data3[i].capacity + " sats</div><div class='col-md-4' style='text-align:right;'>rate " + localFeeRate + " ppm</div></div>\
-					<a href='https://1ml.com/testnet/node/" + data3[i].remote_pubkey + "' target='_blank'>\
+					<a href='https://1ml.com/node/" + data3[i].remote_pubkey + "' target='_blank'>\
 					<div class='progress mb-4' id='barAll_" + i + "' style='margin-bottom:0.3rem !important'>\
 					<div class='progress-bar bg-primary' id='barRemote_" + i + "' role='progressbar' style='width: 100%' aria-valuenow='100' aria-valuemin='0' aria-valuemax='100'></div>\
 					</div></a></div>\
 					<div style='text-align:center;'><button type='button' class='btn btn-secondary' id='bodyBtn_" + i + "'>balance</button></div>\
 					<div class='row'><div class='col-md-6'><div id='remoteBal_" + i + "'></div></div><div class='col-md-6' style='text-align:right;'><div id='localBal_" + i + "'></div></div></div>\
-					<input type='hidden' id='keys_" + i + "' value='" + 10 + "," + data3[i].remote_pubkey + "," + i + "'><br>");
+					<input type='hidden' id='keys_" + i + "' value='" + sats + "," + data3[i].remote_pubkey + "," + i + "'><br>");
 				}
 				$('#channelSum').text(channels);
 				$('#capacitySum').text(sat2btc(capacity) + " BTC");

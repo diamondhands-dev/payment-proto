@@ -193,20 +193,20 @@
 		}
 
 
-		function createInvoice(pKey, bdyIdx){
+		function createInvoice(channel_id, bdyIdx){
 			paymentHash = "";
 			publicKey = "";
 			bodyIndex = "";
 			$('#ftco-loader').addClass('show');
 
-			$.get('/invoice')
+			$.get('/invoice/' + channel_id)
 				.done(function( data ) {
-					//console.log(data.bolt11);
+					console.log(data.bolt11);
 					$('#ftco-loader').removeClass('show');
 					$('.js-modal').fadeIn();
 
 					paymentHash = data.payment_hash;
-					publicKey = pKey;
+					//publicKey = pKey;
 					bodyIndex = bdyIdx;
 
 					$('#invTxt').text(data.bolt11);
@@ -222,7 +222,7 @@
         
 		function requestStatus(){
 			if(paymentHash != ""){
-				$.get('/req_c/' + paymentHash + '/' + publicKey + '/' + bodyIndex)
+				$.get('/check/' + paymentHash + '/' + bodyIndex)
 					.done(function(data){
 						//console.log(data);
 						if(data != ""){
@@ -293,7 +293,7 @@
 						console.log("ERROR");
 					}
 
-					$('#channelList').append("<div class='w-100'><h5 style='word-break: break-all;'>" + data3[i].alias + "</h5><h6 style='word-break: break-all;'>" + data3[i].remote_pubkey + "</h6>\
+					$('#channelList').append("<div class='w-100'><h5 style='word-break: break-all;'>" + data3[i].channel_id + "</h5><h5 style='word-break: break-all;'>" + data3[i].alias + "</h5><h6 style='word-break: break-all;'>" + data3[i].remote_pubkey + "</h6>\
 					<div class='row'  style='flex-wrap:unset;'><div class='col-md-4'>rate " + remoteFeeRate + " ppm</div><div class='col-md-4' style='text-align:center;'>" + data3[i].capacity + " sats</div><div class='col-md-4' style='text-align:right;'>rate " + localFeeRate + " ppm</div></div>\
 					<a href='https://1ml.com/node/" + data3[i].remote_pubkey + "' target='_blank'>\
 					<div class='progress mb-4' id='barAll_" + i + "' style='margin-bottom:0.3rem !important'>\
@@ -301,7 +301,7 @@
 					</div></a></div>\
 					<div style='text-align:center;'><button type='button' class='btn btn-secondary' id='bodyBtn_" + i + "'>balance</button></div>\
 					<div class='row'><div class='col-md-6'><div id='remoteBal_" + i + "'></div></div><div class='col-md-6' style='text-align:right;'><div id='localBal_" + i + "'></div></div></div>\
-					<input type='hidden' id='keys_" + i + "' value='" + data3[i].remote_pubkey + "," + i + "'><br>");
+					<input type='hidden' id='keys_" + i + "' value='" + data3[i].channel_id + "," + i + "'><br>");
 				}
 				$('#channelSum').text(channels);
 				$('#capacitySum').text(sat2btc(capacity) + " BTC");

@@ -3,6 +3,14 @@ from lnd_grpc import lightning_pb2_grpc as lnrpc
 import grpc
 import os
 import codecs
+from os.path import join, dirname
+from dotenv import load_dotenv
+from google.protobuf.json_format import MessageToDict
+
+load_dotenv(verbose=True)
+
+dotenv_path = join(dirname(__file__), '.env')
+load_dotenv(dotenv_path)
 
 os.environ["GRPC_SSL_CIPHER_SUITES"] = 'HIGH+ECDSA'
 
@@ -52,9 +60,11 @@ limiter = Limiter(
 
 
 @limiter.limit("20 per minute")
-@app.route('/invoice/<int:amount>/<description>')
-def getinvoice(amount, description):
+@app.route('/invoice/<channel_id>')
+def getinvoice(channel_id):
     print('getinvoice...')
+    amount = 150
+    description = channel_id
 
     # Call LND gRPC
     response = stub.AddInvoice(ln.Invoice(value=amount,memo=description,))
@@ -105,6 +115,7 @@ def req_b():
         response3 = stub.GetChanInfo(request3)
 
         req_b[i] = {
+            "channel_id": str(response.channels[i].chan_id),
             "alias": response2.node.alias,
             "capacity": response.channels[i].capacity,
             "remote_pubkey": response.channels[i].remote_pubkey,
@@ -120,8 +131,8 @@ def req_b():
     #return str(response)
 
 
-@app.route('/req_c/<payment_hash>/<public_key>/<body_index>')
-def req_c(payment_hash, public_key, body_index):
+@app.route('/check/<payment_hash>/<body_index>')
+def checkinvoice(payment_hash, body_index):
     print('requesting req_c...')
 
     request = ln.PaymentHash(
@@ -136,7 +147,7 @@ def req_c(payment_hash, public_key, body_index):
             response2 = stub.ListChannels(request2)
 
             for i in range(len(response2.channels)):
-                if(response2.channels[i].remote_pubkey == public_key):
+                if(str(response2.channels[i].chan_id) == response.memo):
                     req_c = {
                         "capacity": response2.channels[i].capacity,
                         "local_balance": response2.channels[i].local_balance,
@@ -147,7 +158,7 @@ def req_c(payment_hash, public_key, body_index):
         
             return "ERROR"
         else:
-            return "ERROR"
+            return "expired"
 
     else:
         return ""

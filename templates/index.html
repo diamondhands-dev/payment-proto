@@ -277,12 +277,11 @@
 						console.log("ERROR");
 					}
 
-					$('#channelList').append("<div class='w-100'><h5 style='word-break: break-all;'>" + data_b[i].channel_id + "</h5><h5 style='word-break: break-all;'>" + data_b[i].alias + "</h5><h6 style='word-break: break-all;'>" + data_b[i].remote_pubkey + "</h6>\
+					$('#channelList').append("<div class='w-100'><h5 style='word-break: break-all;'><a href='https://1ml.com/channel/" + data_b[i].channel_id + "' target='_blank'>" + data_b[i].channel_id + "</a></h5><h5 style='word-break: break-all;'>" + data_b[i].alias + "</h5><h6 style='word-break: break-all;'>" + data_b[i].remote_pubkey + "</h6>\
 					<div class='row'  style='flex-wrap:unset;'><div class='col-md-4'>rate " + remoteFeeRate + " ppm</div><div class='col-md-4' style='text-align:center;'>" + data_b[i].capacity + " sats</div><div class='col-md-4' style='text-align:right;'>rate " + localFeeRate + " ppm</div></div>\
-					<a href='https://1ml.com/node/" + data_b[i].remote_pubkey + "' target='_blank'>\
 					<div class='progress mb-4' id='barAll_" + i + "' style='margin-bottom:0.3rem !important'>\
 					<div class='progress-bar bg-primary' id='barRemote_" + i + "' role='progressbar' style='width: 100%' aria-valuenow='100' aria-valuemin='0' aria-valuemax='100'></div>\
-					</div></a></div>\
+					</div></a>\
 					<div style='text-align:center;'><button type='button' class='btn btn-secondary' id='bodyBtn_" + i + "'>balance</button></div>\
 					<div class='row'><div class='col-md-6'><div id='remoteBal_" + i + "'></div></div><div class='col-md-6' style='text-align:right;'><div id='localBal_" + i + "'></div></div></div>\
 					<input type='hidden' id='keys_" + i + "' value='" + data_b[i].channel_id + "," + i + "'><br>");

@@ -3,6 +3,14 @@ from lnd_grpc import lightning_pb2_grpc as lnrpc
 import grpc
 import os
 import codecs
+from os.path import join, dirname
+from dotenv import load_dotenv
+from google.protobuf.json_format import MessageToDict
+
+load_dotenv(verbose=True)
+
+dotenv_path = join(dirname(__file__), '.env')
+load_dotenv(dotenv_path)
 
 os.environ["GRPC_SSL_CIPHER_SUITES"] = 'HIGH+ECDSA'
 
@@ -58,9 +66,6 @@ limiter = Limiter(
 )
 
 
-@limiter.limit("20 per minute")
-
-
 @app.route('/')
 def home():
     return render_template("index.html")
@@ -103,6 +108,7 @@ def req_b():
         response3 = stub.GetChanInfo(request3)
 
         req_b[i] = {
+            "channel_id": str(response.channels[i].chan_id),
             "alias": response2.node.alias,
             "capacity": response.channels[i].capacity,
             "remote_pubkey": response.channels[i].remote_pubkey,
@@ -117,13 +123,14 @@ def req_b():
     return req_b
 
 
+
 #インボイス発行
-@app.route('/req_c/<public_key>')
-def req_c(public_key):
+@app.route('/req_c/<channel_id>')
+def req_c(channel_id):
     print('requesting req_c...')
 
-    #public_keyセションセット
-    session["public_key"] = public_key
+    #channel_idセションセット
+    session["channel_id"] = channel_id
 
     amount = 1500
     description = "DHProto"
@@ -144,6 +151,7 @@ def req_c(public_key):
 
 #支払いチェック＆有料情報取得
 @app.route('/req_d')
+@limiter.limit("20 per minute")
 def req_d():
     print('requesting req_d...')
 
@@ -153,11 +161,12 @@ def req_d():
     response = stub.LookupInvoice(request)
 
     if(response.state == 1):
+
         request2 = ln.ListChannelsRequest()
         response2 = stub.ListChannels(request2)
 
         for i in range(len(response2.channels)):
-            if(response2.channels[i].remote_pubkey == session["public_key"]):
+            if(str(response2.channels[i].chan_id) == session["channel_id"]):
                 req_d = {
                     "capacity": response2.channels[i].capacity,
                     "local_balance": response2.channels[i].local_balance,
@@ -165,11 +174,11 @@ def req_d():
                 }
 
                 #debug
-                print("pkey:" + session["public_key"])
+                print("channel_id:" + session["channel_id"])
                 print("hash:" + session["payment_hash"])
 
                 #全セション変数クリア
-                session["public_key"] = ""
+                session["channel_id"] = ""
                 session["payment_hash"] = ""
                 return req_d
 

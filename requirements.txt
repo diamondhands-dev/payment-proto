@@ -1,0 +1,11 @@
+flask==1.1.4
+flask-limiter
+flask-session
+tornado
+requests
+python-dotenv==0.17.0
+google-api-python-client
+grpcio
+grpcio-tools
+qrcode
+Image

@@ -166,7 +166,7 @@ def req_d():
         response2 = stub.ListChannels(request2)
 
         for i in range(len(response2.channels)):
-            if(response2.channels[i].chan_id == session["channel_id"]):
+            if(str(response2.channels[i].chan_id) == session["channel_id"]):
                 req_d = {
                     "capacity": response2.channels[i].capacity,
                     "local_balance": response2.channels[i].local_balance,

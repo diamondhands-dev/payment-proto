@@ -81,7 +81,7 @@
 					<img src="static/img/copy.png" id="cpImg" style="margin-top:10px;cursor:pointer;">
 				</div>
 				<div>
-					<img src="" id="qrImg" class="qr-img">
+					<a href="" id="invoice"><img src="" id="qrImg" class="qr-img"></a>
 				</div>
 				<div>
 					<a class="js-modal-close" href="">CANCEL</a>
@@ -121,8 +121,11 @@
 			<section class="ftco-section" id="progressbar">
 				<div class="container">
 					<div class="row">
-						<div class="col-md-12">
+						<div class="col">
 							<h2 class="heading-section mb-5">Channels</h2>
+						</div>
+						<div class="col-auto">
+							<input id="channelFilter" type="text" placeholder="Type alias...">
 						</div>
 					</div>
 					<div class="row">
@@ -200,6 +203,7 @@
 
 					$('#invTxt').text(data_c.bolt11);
 					$('#qrImg').attr("src", data_c.qr_str);
+					$('#invoice').attr("href", "lightning:" + data_c.bolt11);
 					
 					timer = setInterval(requestStatus, 4000, bdyIdx);
 				})
@@ -253,8 +257,8 @@
 
 		$.get('/req_a')
 			.done(function(data_a){
-				$('#headerTitle').text(data_a.alias + " LN Explorer");
-				$('#mainTitle').text(data_a.alias + " LN Explorer");
+				$('#headerTitle').text("Channel Explorer");
+				$('#mainTitle').text("Channel Explorer");
 				$('#ownAlias').text(data_a.alias);
 				$('#ownPkey').text(data_a.public_key);
 		});
@@ -270,7 +274,7 @@
 					var remoteBaseFee = data_b[i].node2_base_fee;
 					var remoteFeeRate = data_b[i].node2_fee_rate;
 
-					$('#channelList').append("<div class='w-100'><h5 style='word-break: break-all;'><a href='https://1ml.com/channel/" + data_b[i].channel_id + "' target='_blank'>" + data_b[i].channel_id + "</a></h5><h5 style='word-break: break-all;'>" + data_b[i].alias + "</h5><h6 style='word-break: break-all;'>" + data_b[i].remote_pubkey + "</h6>\
+					$('#channelList').append("<div class='chanInfo w-100'><h5 style='word-break: break-all;'><a href='https://1ml.com/channel/" + data_b[i].channel_id + "' target='_blank'>" + data_b[i].channel_id + "</a></h5><h5 style='word-break: break-all;'>" + data_b[i].alias + "</h5><h6 style='word-break: break-all;'>" + data_b[i].remote_pubkey + "</h6>\
 					<div class='row'  style='flex-wrap:unset;'><div class='col-md-4'>base fee " + remoteBaseFee + " msat</div><div class='col-md-4' style='text-align:center;'>" + "</div><div class='col-md-4' style='text-align:right;'>base fee " + localBaseFee + " msat</div></div>\
 					<div class='row'  style='flex-wrap:unset;'><div class='col-md-4'>fee rate " + remoteFeeRate + " ppm</div><div class='col-md-4' style='text-align:center;'>" + data_b[i].capacity + " sats</div><div class='col-md-4' style='text-align:right;'>fee rate " + localFeeRate + " ppm</div></div>\
 					<div class='progress mb-4' id='barAll_" + i + "' style='margin-bottom:0.3rem !important'>\
@@ -297,7 +301,14 @@
 			});
 		});
 
-
+		$(function(){
+			$("#channelFilter").on("keyup", function() {
+				var value = $(this).val().toLowerCase();
+				$(".chanInfo").filter(function() {
+				$(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+				});
+			});
+		});
 	</script>
 	</body>
 </html>

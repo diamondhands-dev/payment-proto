@@ -33,6 +33,8 @@ stub = lnrpc.LightningStub(channel)
 
 import flask
 from flask import render_template, request, send_from_directory
+from flask import Flask, session
+from flask_session import Session
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import uuid
@@ -41,6 +43,7 @@ import qrcode
 import time
 from io import BytesIO
 from PIL import Image
+from datetime import timedelta
 
 
 def pil_to_base64(img):
@@ -52,6 +55,10 @@ def pil_to_base64(img):
 
 
 app = flask.Flask(__name__, static_folder='static')
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_TYPE"] = "filesystem"
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=1)
+Session(app)
 limiter = Limiter(
     app,
     key_func=get_remote_address,
@@ -59,26 +66,12 @@ limiter = Limiter(
 )
 
 
-@limiter.limit("20 per minute")
-@app.route('/invoice/<channel_id>')
-def getinvoice(channel_id):
-    print('getinvoice...')
-    amount = 150
-    description = channel_id
-
-    # Call LND gRPC
-    response = stub.AddInvoice(ln.Invoice(value=amount,memo=description,))
-    img = qrcode.make(response.payment_request)
-    imgStr = "data:image/jpeg;base64," + pil_to_base64(img)
-
-    invoice = {
-        "bolt11": response.payment_request,
-        "payment_hash": response.r_hash.hex(),
-        "qr_str": imgStr,
-    }
-    return invoice
+@app.route('/')
+def home():
+    return render_template("index.html")
 
 
+#無料情報１取得
 @app.route('/req_a')
 def req_a():
     print('requesting req_a...')
@@ -91,9 +84,9 @@ def req_a():
         "public_key": response.identity_pubkey,
     }
     return req_a
-    #return str(response)
 
 
+#無料情報２取得
 @app.route('/req_b')
 def req_b():
     print('requesting req_b...')
@@ -128,45 +121,71 @@ def req_b():
         }
 
     return req_b
-    #return str(response)
 
 
-@app.route('/check/<payment_hash>/<body_index>')
-def checkinvoice(payment_hash, body_index):
+
+#インボイス発行
+@app.route('/req_c/<channel_id>')
+def req_c(channel_id):
     print('requesting req_c...')
 
+    #channel_idセションセット
+    session["channel_id"] = channel_id
+
+    amount = 1500
+    description = "DHProto"
+
+    response = stub.AddInvoice(ln.Invoice(value=amount,memo=description,))
+    img = qrcode.make(response.payment_request)
+    imgStr = "data:image/jpeg;base64," + pil_to_base64(img)
+
+    #payment_hashセションセット
+    session["payment_hash"] = response.r_hash.hex()
+
+    req_c = {
+        "bolt11": response.payment_request,
+        "qr_str": imgStr,
+    }
+    return req_c
+
+
+#支払いチェック＆有料情報取得
+@app.route('/req_d')
+@limiter.limit("20 per minute")
+def req_d():
+    print('requesting req_d...')
+
     request = ln.PaymentHash(
-        r_hash_str = payment_hash,
+        r_hash_str = session["payment_hash"],
     )
     response = stub.LookupInvoice(request)
 
     if(response.state == 1):
-        print(int(time.time()) - int(response.settle_date))
-        if((int(time.time()) - int(response.settle_date)) < 45):
-            request2 = ln.ListChannelsRequest()
-            response2 = stub.ListChannels(request2)
 
-            for i in range(len(response2.channels)):
-                if(str(response2.channels[i].chan_id) == response.memo):
-                    req_c = {
-                        "capacity": response2.channels[i].capacity,
-                        "local_balance": response2.channels[i].local_balance,
-                        "remote_balance": response2.channels[i].remote_balance,
-                        "body_index": body_index,
-                    }
-                    return req_c
-        
-            return "ERROR"
-        else:
-            return "expired"
+        request2 = ln.ListChannelsRequest()
+        response2 = stub.ListChannels(request2)
+
+        for i in range(len(response2.channels)):
+            if(response2.channels[i].chan_id == session["channel_id"]):
+                req_d = {
+                    "capacity": response2.channels[i].capacity,
+                    "local_balance": response2.channels[i].local_balance,
+                    "remote_balance": response2.channels[i].remote_balance,
+                }
+
+                #debug
+                print("channel_id:" + session["channel_id"])
+                print("hash:" + session["payment_hash"])
+
+                #全セション変数クリア
+                session["channel_id"] = ""
+                session["payment_hash"] = ""
+                return req_d
+
+        return "ERROR"
 
     else:
         return ""
-
-
-@app.route('/')
-def home():
-    return render_template("index.html")
 
 
 @app.route("/favicon.ico")

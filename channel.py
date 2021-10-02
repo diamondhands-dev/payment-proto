@@ -30,6 +30,7 @@ combined_creds = grpc.composite_channel_credentials(cert_creds, auth_creds)
 channel = grpc.secure_channel(f"{endpoint}:{port}", combined_creds, options=[('grpc.max_receive_message_length',1024*1024*50)])
 stub = lnrpc.LightningStub(channel)
 
+my_node_id = stub.GetInfo(ln.GetInfoRequest()).identity_pubkey
 
 from sqlalchemy import Column, Integer, String, DateTime, PickleType
 from sqlalchemy import create_engine
@@ -85,20 +86,30 @@ def getChannels():
         )
         response3 = stub.GetChanInfo(request3)
 
-        channel = Channel(
-                        response.channels[i].chan_id,
-                        response.channels[i].capacity,
-                        
-                        response3.node2_pub,
-                        response3.node2_policy.fee_base_msat,
-                        response3.node2_policy.fee_rate_milli_msat,
-
-                        response3.node1_pub,
-                        response2.node.alias,
-                        response3.node1_policy.fee_base_msat,
-                        response3.node1_policy.fee_base_msat,
-
-        )
+        if(response3.node1_pub == my_node_id):
+            channel = Channel(
+                            response.channels[i].chan_id,
+                            response.channels[i].capacity,
+                            response3.node1_pub,
+                            response3.node1_policy.fee_base_msat,
+                            response3.node1_policy.fee_rate_milli_msat,
+                            response3.node2_pub,
+                            response2.node.alias,
+                            response3.node2_policy.fee_base_msat,
+                            response3.node2_policy.fee_rate_milli_msat,
+            )
+        else:
+            channel = Channel(
+                            response.channels[i].chan_id,
+                            response.channels[i].capacity,
+                            response3.node2_pub,
+                            response3.node2_policy.fee_base_msat,
+                            response3.node2_policy.fee_rate_milli_msat,
+                            response3.node1_pub,
+                            response2.node.alias,
+                            response3.node1_policy.fee_base_msat,
+                            response3.node1_policy.fee_rate_milli_msat,
+            )
         s.add(channel)
         s.commit()
 
@@ -110,13 +121,4 @@ if __name__ == '__main__':
     engine = create_engine(db_filename, echo=True)
     Base.metadata.create_all(engine)
 
-    '''
-    Session = sessionmaker()
-    Session.configure(bind=engine)
-    s = Session()
-    channels = s.query(Channel).all()
-    for channel in channels:
-        print(channel.channel_id)
-    '''
     getChannels()
-

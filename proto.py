@@ -16,6 +16,8 @@ os.environ["GRPC_SSL_CIPHER_SUITES"] = 'HIGH+ECDSA'
 
 def metadata_callback(context, callback):
     callback([('macaroon', macaroon)], None)
+def metadata_callback_invoice(context, callback):
+    callback([('macaroon', macaroon_invoice)], None)
 
 endpoint = os.getenv("LND_GRPC_ENDPOINT")
 port = int(os.getenv("LND_GRPC_PORT"))
@@ -23,12 +25,20 @@ cert = open(os.getenv("LND_GRPC_CERT"), 'rb').read()
 with open(os.getenv("LND_GRPC_MACAROON"), 'rb') as f:
     macaroon_bytes = f.read()
     macaroon = codecs.encode(macaroon_bytes, 'hex')
+with open(os.getenv("LND_GRPC_MACAROON_INVOICE"), 'rb') as f:
+    macaroon_bytes = f.read()
+    macaroon_invoice = codecs.encode(macaroon_bytes, 'hex')
 
 cert_creds = grpc.ssl_channel_credentials(cert)
 auth_creds = grpc.metadata_call_credentials(metadata_callback)
 combined_creds = grpc.composite_channel_credentials(cert_creds, auth_creds)
 channel = grpc.secure_channel(f"{endpoint}:{port}", combined_creds)
 stub = lnrpc.LightningStub(channel)
+
+auth_creds = grpc.metadata_call_credentials(metadata_callback_invoice)
+combined_creds = grpc.composite_channel_credentials(cert_creds, auth_creds)
+channel = grpc.secure_channel(f"{endpoint}:{port}", combined_creds)
+stub_invoice = lnrpc.LightningStub(channel)
 
 
 import flask
@@ -45,6 +55,12 @@ from io import BytesIO
 from PIL import Image
 from datetime import timedelta
 
+from sqlalchemy import Column, Integer, String, DateTime, PickleType
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+Base = declarative_base()
+from channel import Channel
 
 def pil_to_base64(img):
     buffer = BytesIO()
@@ -91,33 +107,29 @@ def req_a():
 def req_b():
     print('requesting req_b...')
 
-    request = ln.ListChannelsRequest()
-    response = stub.ListChannels(request)
+    db_filename = 'sqlite:///' + os.path.join('./graph.db')
 
+    engine = create_engine(db_filename, echo=True)
+    Base.metadata.create_all(engine)
+
+    Session = sessionmaker()
+    Session.configure(bind=engine)
+    s = Session()
+    channels = s.query(Channel).all()
+    
     req_b = {}
-    for i in range(len(response.channels)):
-        request2 = ln.NodeInfoRequest(
-            pub_key = response.channels[i].remote_pubkey,
-            include_channels = False,
-        )
-        response2 = stub.GetNodeInfo(request2)
-
-        request3 = ln.ChanInfoRequest(
-            chan_id = response.channels[i].chan_id,
-        )
-        response3 = stub.GetChanInfo(request3)
-
+    for i in range(len(channels)):
         req_b[i] = {
-            "channel_id": str(response.channels[i].chan_id),
-            "alias": response2.node.alias,
-            "capacity": response.channels[i].capacity,
-            "remote_pubkey": response.channels[i].remote_pubkey,
-            "node1_pkey": response3.node1_pub,
-            "node1_base_fee": response3.node1_policy.fee_base_msat,
-            "node1_fee_rate": response3.node1_policy.fee_rate_milli_msat,
-            "node2_pkey": response3.node2_pub,
-            "node2_base_fee": response3.node2_policy.fee_base_msat,
-            "node2_fee_rate": response3.node2_policy.fee_rate_milli_msat,
+            "channel_id": str(channels[i].channel_id),
+            "alias": channels[i].node2_alias,
+            "capacity": channels[i].capacity,
+            "remote_pubkey": channels[i].node2_pub,
+            "node1_pkey": channels[i].node1_pub,
+            "node1_base_fee": channels[i].node1_base_fee,
+            "node1_fee_rate": channels[i].node1_fee_rate,
+            "node2_pkey": channels[i].node2_pub,
+            "node2_base_fee": channels[i].node2_base_fee,
+            "node2_fee_rate": channels[i].node2_fee_rate,
         }
 
     return req_b
@@ -132,10 +144,10 @@ def req_c(channel_id):
     #channel_idセションセット
     session["channel_id"] = channel_id
 
-    amount = 1500
+    amount = 150
     description = "DHProto"
 
-    response = stub.AddInvoice(ln.Invoice(value=amount,memo=description,))
+    response = stub_invoice.AddInvoice(ln.Invoice(value=amount,memo=description,))
     img = qrcode.make(response.payment_request)
     imgStr = "data:image/jpeg;base64," + pil_to_base64(img)
 

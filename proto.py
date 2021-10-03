@@ -145,7 +145,7 @@ def req_c(channel_id):
     session["channel_id"] = channel_id
 
     amount = 150
-    description = "DHProto"
+    description = "Peek DH channel_id: " + str(channel_id)
 
     response = stub_invoice.AddInvoice(ln.Invoice(value=amount,memo=description,))
     img = qrcode.make(response.payment_request)

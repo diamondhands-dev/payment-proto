@@ -74,10 +74,10 @@ def getChannels():
     response = stub.ListChannels(request)
     pubkeys = set([ sub['gfg'] for sub in test_list ])
 
-    for pubkey in range(len(pubkeys)):
+    for i in range(len(pubkeys)):
         
         request2 = ln.NodeInfoRequest(
-            pub_key = pubkey,
+            pub_key = pubkeys[i],
             include_channels = True,
         )
         response2 = stub.GetNodeInfo(request2)

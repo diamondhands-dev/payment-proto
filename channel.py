@@ -72,7 +72,7 @@ def getChannels():
 
     request = ln.ListChannelsRequest()
     response = stub.ListChannels(request)
-    pubkeys = set([ sub['gfg'] for sub in test_list ])
+    pubkeys = list(set([ sub.remote_pubkey for sub in response.channels ]))
 
     for i in range(len(pubkeys)):
         
@@ -85,7 +85,7 @@ def getChannels():
         for chan in response2.channels:
             if(chan.node1_pub == my_node_id):
                 channel = Channel(
-                                chan.chan_id,
+                                chan.channel_id,
                                 chan.capacity,
                                 chan.node1_pub,
                                 chan.node1_policy.fee_base_msat,
@@ -99,7 +99,7 @@ def getChannels():
                 s.commit()
             elif(chan.node2_pub == my_node_id):
                 channel = Channel(
-                                chan.chan_id,
+                                chan.channel_id,
                                 chan.capacity,
                                 chan.node2_pub,
                                 chan.node2_policy.fee_base_msat,
@@ -111,8 +111,6 @@ def getChannels():
                 )
                 s.add(channel)
                 s.commit()
-            else:
-                # Channel not to my_node_id
 
 
 if __name__ == '__main__':

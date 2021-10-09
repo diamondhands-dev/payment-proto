@@ -72,47 +72,48 @@ def getChannels():
 
     request = ln.ListChannelsRequest()
     response = stub.ListChannels(request)
+    pubkeys = list(set([ sub.remote_pubkey for sub in response.channels ]))
+    channels = list(set([ sub.chan_id for sub in response.channels ]))
 
-    for i in range(len(response.channels)):
+    for i in range(len(pubkeys)):
         
         request2 = ln.NodeInfoRequest(
-            pub_key = response.channels[i].remote_pubkey,
-            include_channels = False,
+            pub_key = pubkeys[i],
+            include_channels = True,
         )
         response2 = stub.GetNodeInfo(request2)
 
-        request3 = ln.ChanInfoRequest(
-            chan_id = response.channels[i].chan_id,
-        )
-        response3 = stub.GetChanInfo(request3)
-
-        if(response3.node1_pub == my_node_id):
-            channel = Channel(
-                            response.channels[i].chan_id,
-                            response.channels[i].capacity,
-                            response3.node1_pub,
-                            response3.node1_policy.fee_base_msat,
-                            response3.node1_policy.fee_rate_milli_msat,
-                            response3.node2_pub,
-                            response2.node.alias,
-                            response3.node2_policy.fee_base_msat,
-                            response3.node2_policy.fee_rate_milli_msat,
-            )
-        else:
-            channel = Channel(
-                            response.channels[i].chan_id,
-                            response.channels[i].capacity,
-                            response3.node2_pub,
-                            response3.node2_policy.fee_base_msat,
-                            response3.node2_policy.fee_rate_milli_msat,
-                            response3.node1_pub,
-                            response2.node.alias,
-                            response3.node1_policy.fee_base_msat,
-                            response3.node1_policy.fee_rate_milli_msat,
-            )
-        s.add(channel)
-        s.commit()
-
+        for chan in response2.channels:
+            if (chan.channel_id not in channels):
+                continue
+            if(chan.node1_pub == my_node_id):
+                channel = Channel(
+                                chan.channel_id,
+                                chan.capacity,
+                                chan.node1_pub,
+                                chan.node1_policy.fee_base_msat,
+                                chan.node1_policy.fee_rate_milli_msat,
+                                chan.node2_pub,
+                                response2.node.alias,
+                                chan.node2_policy.fee_base_msat,
+                                chan.node2_policy.fee_rate_milli_msat,
+                )
+                s.add(channel)
+                s.commit()
+            elif(chan.node2_pub == my_node_id):
+                channel = Channel(
+                                chan.channel_id,
+                                chan.capacity,
+                                chan.node2_pub,
+                                chan.node2_policy.fee_base_msat,
+                                chan.node2_policy.fee_rate_milli_msat,
+                                chan.node1_pub,
+                                response2.node.alias,
+                                chan.node1_policy.fee_base_msat,
+                                chan.node1_policy.fee_rate_milli_msat,
+                )
+                s.add(channel)
+                s.commit()
 
 
 if __name__ == '__main__':

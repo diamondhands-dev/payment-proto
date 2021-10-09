@@ -73,6 +73,7 @@ def getChannels():
     request = ln.ListChannelsRequest()
     response = stub.ListChannels(request)
     pubkeys = list(set([ sub.remote_pubkey for sub in response.channels ]))
+    channels = list(set([ sub.chan_id for sub in response.channels ]))
 
     for i in range(len(pubkeys)):
         
@@ -83,6 +84,8 @@ def getChannels():
         response2 = stub.GetNodeInfo(request2)
 
         for chan in response2.channels:
+            if (chan.channel_id not in channels):
+                continue
             if(chan.node1_pub == my_node_id):
                 channel = Channel(
                                 chan.channel_id,

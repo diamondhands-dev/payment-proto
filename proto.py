@@ -44,6 +44,7 @@ stub_invoice = lnrpc.LightningStub(channel)
 import flask
 from flask import render_template, request, send_from_directory
 from flask import Flask, session
+from flask_cors import CORS
 from flask_session import Session
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -80,7 +81,7 @@ limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["2000 per day", "20 per minute"]
 )
-
+CORS(app)
 
 @app.route('/')
 def home():

@@ -99,7 +99,6 @@ def getChannels():
                                 chan.node2_policy.fee_rate_milli_msat,
                 )
                 s.add(channel)
-                s.commit()
             elif(chan.node2_pub == my_node_id):
                 channel = Channel(
                                 chan.channel_id,
@@ -113,7 +112,7 @@ def getChannels():
                                 chan.node1_policy.fee_rate_milli_msat,
                 )
                 s.add(channel)
-                s.commit()
+    s.commit()
 
 
 if __name__ == '__main__':

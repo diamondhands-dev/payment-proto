@@ -6,8 +6,8 @@ import codecs
 from os.path import join, dirname
 from dotenv import load_dotenv
 from google.protobuf.json_format import MessageToDict
-
 import lnd_apiweb
+import sys
 
 load_dotenv(verbose=True)
 
@@ -108,8 +108,13 @@ def req_b():
     Session = sessionmaker()
     Session.configure(bind=engine)
     s = Session()
-    channels = s.query(Channel).all()
-    
+    try:
+        channels = s.query(Channel).all()
+    except Exception as e:
+        print("ERROR: {0}".format(sys.exc_info()[1]))
+        print("ERROR: Try running channel.py first")
+        exit()
+
     req_b = {}
     for i in range(len(channels)):
         req_b[i] = {

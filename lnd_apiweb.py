@@ -75,7 +75,7 @@ def createInvoice(channel_id):
 
     resCreateInvoice = {
         "bolt11": response.payment_request,
-        "qr_str": imgStr,
+        "qrStr": imgStr,
     }
 
     #debug
@@ -104,8 +104,8 @@ def checkInvoice():
             if(str(response2.channels[i].chan_id) == session["channel_id"]):
                 resCheckInvoice = {
                     "capacity": response2.channels[i].capacity,
-                    "local_balance": response2.channels[i].local_balance,
-                    "remote_balance": response2.channels[i].remote_balance,
+                    "localBalance": response2.channels[i].local_balance,
+                    "remoteBalance": response2.channels[i].remote_balance,
                 }
 
                 #debug

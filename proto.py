@@ -81,24 +81,24 @@ def home():
 
 
 #無料情報１取得
-@app.route('/req_a')
-def req_a():
-    print('requesting req_a...')
+@app.route('/self')
+def req_self():
+    print('requesting my node info ...')
 
     request = ln.GetInfoRequest()
     response = stub.GetInfo(request)
 
-    req_a = {
+    output = {
         "alias": response.alias,
-        "public_key": response.identity_pubkey,
+        "publicKey": response.identity_pubkey,
     }
-    return req_a
+    return output
 
 
 #無料情報２取得
-@app.route('/req_b')
-def req_b():
-    print('requesting req_b...')
+@app.route('/channels')
+def req_channels():
+    print('requesting channels...')
 
     db_filename = 'sqlite:///' + os.path.join('./graph.db')
 
@@ -110,35 +110,35 @@ def req_b():
     s = Session()
     channels = s.query(Channel).all()
     
-    req_b = {}
+    output = {}
     for i in range(len(channels)):
-        req_b[i] = {
-            "channel_id": str(channels[i].channel_id),
+        output[i] = {
+            "channelId": str(channels[i].channel_id),
             "alias": channels[i].node2_alias,
             "capacity": channels[i].capacity,
-            "remote_pubkey": channels[i].node2_pub,
-            "node1_pkey": channels[i].node1_pub,
-            "node1_base_fee": channels[i].node1_base_fee,
-            "node1_fee_rate": channels[i].node1_fee_rate,
-            "node2_pkey": channels[i].node2_pub,
-            "node2_base_fee": channels[i].node2_base_fee,
-            "node2_fee_rate": channels[i].node2_fee_rate,
+            #"remotePubKey": channels[i].node2_pub,
+            #"node1PubKey": channels[i].node1_pub,
+            "node1BaseFee": channels[i].node1_base_fee,
+            "node1FeeRate": channels[i].node1_fee_rate,
+            "node2PubKey": channels[i].node2_pub,
+            "node2BaseFee": channels[i].node2_base_fee,
+            "node2FeeRate": channels[i].node2_fee_rate,
         }
 
-    return req_b
+    return output 
 
 
 
 #インボイス発行
-@app.route('/req_c/<channel_id>')
-def req_c(channel_id):
+@app.route('/invoice/<channel_id>')
+def req_invoice(channel_id):
     return lnd_apiweb.createInvoice(channel_id)
 
 
 #支払いチェック＆有料情報取得
-@app.route('/req_d')
+@app.route('/checkInvoice')
 @limiter.limit("20 per minute")
-def req_d():
+def req_checkInvoice():
     return lnd_apiweb.checkInvoice()
 
 

@@ -2,3 +2,5 @@
 __pycache__/
 /*_session/
 graph.db
+nohup.out
+

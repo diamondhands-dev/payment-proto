@@ -1,6 +1,6 @@
-from lnd_grpc import lightning_pb2 as ln
-from lnd_grpc import lightning_pb2_grpc as lnrpc
-import grpc
+#from lnd_grpc import lightning_pb2 as ln
+#from lnd_grpc import lightning_pb2_grpc as lnrpc
+#import grpc
 import os
 import codecs
 from os.path import join, dirname
@@ -16,21 +16,21 @@ load_dotenv(dotenv_path)
 
 os.environ["GRPC_SSL_CIPHER_SUITES"] = 'HIGH+ECDSA'
 
-def metadata_callback(context, callback):
-    callback([('macaroon', macaroon)], None)
+#def metadata_callback(context, callback):
+#    callback([('macaroon', macaroon)], None)
 
-endpoint = os.getenv("LND_GRPC_ENDPOINT")
-port = int(os.getenv("LND_GRPC_PORT"))
-cert = open(os.getenv("LND_GRPC_CERT"), 'rb').read()
-with open(os.getenv("LND_GRPC_MACAROON"), 'rb') as f:
-    macaroon_bytes = f.read()
-    macaroon = codecs.encode(macaroon_bytes, 'hex')
+#endpoint = os.getenv("LND_GRPC_ENDPOINT")
+#port = int(os.getenv("LND_GRPC_PORT"))
+#cert = open(os.getenv("LND_GRPC_CERT"), 'rb').read()
+#with open(os.getenv("LND_GRPC_MACAROON"), 'rb') as f:
+#    macaroon_bytes = f.read()
+#    macaroon = codecs.encode(macaroon_bytes, 'hex')
 
-cert_creds = grpc.ssl_channel_credentials(cert)
-auth_creds = grpc.metadata_call_credentials(metadata_callback)
-combined_creds = grpc.composite_channel_credentials(cert_creds, auth_creds)
-channel = grpc.secure_channel(f"{endpoint}:{port}", combined_creds)
-stub = lnrpc.LightningStub(channel)
+#cert_creds = grpc.ssl_channel_credentials(cert)
+#auth_creds = grpc.metadata_call_credentials(metadata_callback)
+#combined_creds = grpc.composite_channel_credentials(cert_creds, auth_creds)
+#channel = grpc.secure_channel(f"{endpoint}:{port}", combined_creds)
+#stub = lnrpc.LightningStub(channel)
 
 
 import flask
@@ -41,11 +41,11 @@ from flask_session import Session
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import uuid
-import base64
-import qrcode
+#import base64
+#import qrcode
 import time
-from io import BytesIO
-from PIL import Image
+#from io import BytesIO
+#from PIL import Image
 from datetime import timedelta
 
 from sqlalchemy import Column, Integer, String, DateTime, PickleType
@@ -93,6 +93,7 @@ def req_self():
         "publicKey": info[0].identity_pubkey,
     }
 
+    s.close()
     return output
 
 
@@ -125,7 +126,7 @@ def req_channels():
             "node2BaseFee": channels[i].node2_base_fee,
             "node2FeeRate": channels[i].node2_fee_rate,
         }
-
+    s.close()
     return output 
 
 
@@ -156,9 +157,9 @@ def server_error(err):
 
 
 if __name__ == '__main__':
-    print('Starting server on port {port}'.format(
-        port=port
-    ))
+    #print('Starting server on port {port}'.format(
+    #    port=port
+    #))
     app.config['SECRET_KEY'] = os.getenv(
         "REQUEST_INVOICE_SECRET",
         default=uuid.uuid4())

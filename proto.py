@@ -53,14 +53,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 Base = declarative_base()
-from channel import Channel
-
-def pil_to_base64(img):
-    buffer = BytesIO()
-    img.save(buffer, format="jpeg")
-    img_str = base64.b64encode(buffer.getvalue()).decode("ascii")
-
-    return img_str
+from channel import Channel, Info
 
 
 app = flask.Flask(__name__, static_folder='static')
@@ -80,22 +73,30 @@ def home():
     return render_template("index.html")
 
 
-#無料情報１取得
+#デフォルト情報１取得
 @app.route('/self')
 def req_self():
     print('requesting my node info ...')
 
-    request = ln.GetInfoRequest()
-    response = stub.GetInfo(request)
+    db_filename = 'sqlite:///' + os.path.join('./graph.db')
+
+    engine = create_engine(db_filename, echo=True)
+    Base.metadata.create_all(engine)
+
+    Session = sessionmaker()
+    Session.configure(bind=engine)
+    s = Session()
+    info = s.query(Info).all()
 
     output = {
-        "alias": response.alias,
-        "publicKey": response.identity_pubkey,
+        "alias": info[0].alias,
+        "publicKey": info[0].identity_pubkey,
     }
+
     return output
 
 
-#無料情報２取得
+#デフォルト情報２取得
 @app.route('/channels')
 def req_channels():
     print('requesting channels...')
@@ -135,7 +136,7 @@ def req_invoice(channel_id):
     return lnd_apiweb.createInvoice(channel_id)
 
 
-#支払いチェック＆有料情報取得
+#支払いチェック＆バランス情報取得
 @app.route('/checkInvoice')
 @limiter.limit("20 per minute")
 def req_checkInvoice():

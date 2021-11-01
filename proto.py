@@ -1,37 +1,12 @@
-#from lnd_grpc import lightning_pb2 as ln
-#from lnd_grpc import lightning_pb2_grpc as lnrpc
-#import grpc
 import os
-import codecs
 from os.path import join, dirname
 from dotenv import load_dotenv
-from google.protobuf.json_format import MessageToDict
 
 import lnd_apiweb
 
 load_dotenv(verbose=True)
-
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
-
-os.environ["GRPC_SSL_CIPHER_SUITES"] = 'HIGH+ECDSA'
-
-#def metadata_callback(context, callback):
-#    callback([('macaroon', macaroon)], None)
-
-#endpoint = os.getenv("LND_GRPC_ENDPOINT")
-#port = int(os.getenv("LND_GRPC_PORT"))
-#cert = open(os.getenv("LND_GRPC_CERT"), 'rb').read()
-#with open(os.getenv("LND_GRPC_MACAROON"), 'rb') as f:
-#    macaroon_bytes = f.read()
-#    macaroon = codecs.encode(macaroon_bytes, 'hex')
-
-#cert_creds = grpc.ssl_channel_credentials(cert)
-#auth_creds = grpc.metadata_call_credentials(metadata_callback)
-#combined_creds = grpc.composite_channel_credentials(cert_creds, auth_creds)
-#channel = grpc.secure_channel(f"{endpoint}:{port}", combined_creds)
-#stub = lnrpc.LightningStub(channel)
-
 
 import flask
 from flask import render_template, request, send_from_directory
@@ -41,19 +16,13 @@ from flask_session import Session
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import uuid
-#import base64
-#import qrcode
-import time
-#from io import BytesIO
-#from PIL import Image
-from datetime import timedelta
+from datetime import timedelta, datetime
 
-from sqlalchemy import Column, Integer, String, DateTime, PickleType
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 Base = declarative_base()
-from channel import Channel, Info
+import channel
 
 
 app = flask.Flask(__name__, static_folder='static')
@@ -86,7 +55,7 @@ def req_self():
     Session = sessionmaker()
     Session.configure(bind=engine)
     s = Session()
-    info = s.query(Info).all()
+    info = s.query(channel.Info).all()
 
     output = {
         "alias": info[0].alias,
@@ -110,7 +79,7 @@ def req_channels():
     Session = sessionmaker()
     Session.configure(bind=engine)
     s = Session()
-    channels = s.query(Channel).all()
+    channels = s.query(channel.Channel).all()
     
     output = {}
     for i in range(len(channels)):
@@ -155,14 +124,14 @@ def server_error(err):
     print(err)
     return "Some general exception", 500
 
+from apscheduler.schedulers.background import BackgroundScheduler
+sched = BackgroundScheduler(daemon=True)
+sched.add_job(channel.batch,'interval',hours=24) #next_run_time=datetime.now()
+sched.start()
 
 if __name__ == '__main__':
-    #print('Starting server on port {port}'.format(
-    #    port=port
-    #))
     app.config['SECRET_KEY'] = os.getenv(
         "REQUEST_INVOICE_SECRET",
         default=uuid.uuid4())
     app.debug = True
     app.run(host='0.0.0.0', port=8810)
-

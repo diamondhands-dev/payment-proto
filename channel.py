@@ -31,6 +31,7 @@ channel = grpc.secure_channel(f"{endpoint}:{port}", combined_creds, options=[('g
 stub = lnrpc.LightningStub(channel)
 
 my_node_id = stub.GetInfo(ln.GetInfoRequest()).identity_pubkey
+my_alias = stub.GetInfo(ln.GetInfoRequest()).alias
 
 from sqlalchemy import Column, Integer, String, DateTime, PickleType
 from sqlalchemy import create_engine
@@ -38,6 +39,15 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 Base = declarative_base()
+
+class Info(Base):
+    __tablename__ = "info"
+    identity_pubkey = Column(String, primary_key=True)
+    alias = Column(String)
+
+    def __init__(self, identity_pubkey, alias):
+        self.identity_pubkey = identity_pubkey
+        self.alias = alias
 
 class Channel(Base):
     __tablename__ = "channel"
@@ -61,6 +71,21 @@ class Channel(Base):
         self.node2_alias = node2_alias
         self.node2_base_fee = node2_base_fee
         self.node2_fee_rate = node2_fee_rate
+
+def getInfo():
+
+    Session = sessionmaker()
+    Session.configure(bind=engine)
+    s = Session()
+    s.query(Info).delete()
+    s.commit()
+
+    info = Info(
+                my_node_id,
+                my_alias,
+    )
+    s.add(info)
+    s.commit()
 
 def getChannels():
 
@@ -114,7 +139,6 @@ def getChannels():
                 s.add(channel)
     s.commit()
 
-
 if __name__ == '__main__':
     db_filename = 'sqlite:///' + os.path.join('./graph.db')
 
@@ -122,3 +146,4 @@ if __name__ == '__main__':
     Base.metadata.create_all(engine)
 
     getChannels()
+    getInfo()

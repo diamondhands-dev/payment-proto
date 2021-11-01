@@ -196,13 +196,13 @@
 		function createInvoice(channel_id, bdyIdx){
 			$('#ftco-loader').addClass('show');
 
-			$.get('/req_c/' + channel_id)
+			$.get('/invoice/' + channel_id)
 				.done(function(data_c){
 					$('#ftco-loader').removeClass('show');
 					$('.js-modal').fadeIn();
 
 					$('#invTxt').text(data_c.bolt11);
-					$('#qrImg').attr("src", data_c.qr_str);
+					$('#qrImg').attr("src", data_c.qrStr);
 					$('#invoice').attr("href", "lightning:" + data_c.bolt11);
 					
 					timer = setInterval(requestStatus, 4000, bdyIdx);
@@ -214,7 +214,7 @@
 		}
         
 		function requestStatus(idx){
-			$.get('/req_d')
+			$.get('/checkInvoice')
 				.done(function(data_d){
 					if(data_d != ""){
 						clearInterval(timer);
@@ -222,10 +222,10 @@
 						var remoteShare = 0;
 						var localShare = 0;
 						if(data_d != "ERROR"){
-							remoteShare = parseInt(Math.round((data_d.remote_balance / data_d.capacity) * 100))
-							localShare = parseInt(Math.round((data_d.local_balance / data_d.capacity) * 100))
-							$('#remoteBal_' + idx).text("Remote:" + data_d.remote_balance);
-							$('#localBal_' + idx).text("Local:" + data_d.local_balance);
+							remoteShare = parseInt(Math.round((data_d.remoteBalance / data_d.capacity) * 100))
+							localShare = parseInt(Math.round((data_d.localBalance / data_d.capacity) * 100))
+							$('#remoteBal_' + idx).text("Remote:" + sat2Str(data_d.remoteBalance));
+							$('#localBal_' + idx).text("Local:" + sat2Str(data_d.localBalance));
 							$('#bodyBtn_' + idx).hide();
 							//console.log(remoteShare)
 							//console.log(localShare)
@@ -244,6 +244,10 @@
 			return Math.round(val * 1e8);
 		}
 
+		function sat2Str(val){
+			return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+		}
+
 		$('#cpImg').on('click', function() {
 			var copyText = document.getElementById("invTxt");
 			var textArea = document.createElement("textarea");
@@ -255,34 +259,34 @@
 			select_all($('#invTxt')[0]);
 		});
 
-		$.get('/req_a')
+		$.get('/self')
 			.done(function(data_a){
 				$('#headerTitle').text("Channel Explorer");
 				$('#mainTitle').text("Channel Explorer");
 				$('#ownAlias').text(data_a.alias);
-				$('#ownPkey').text(data_a.public_key);
+				$('#ownPkey').text(data_a.publicKey);
 		});
 
-		$.get('/req_b')
+		$.get('/channels')
 			.done(function(data_b){
 				var capacity = 0;
 				var channels = Object.keys(data_b).length;
 				for(var i=0; i<channels; i++){
 					capacity += data_b[i].capacity;
-					var localBaseFee = data_b[i].node1_base_fee;
-					var localFeeRate = data_b[i].node1_fee_rate;
-					var remoteBaseFee = data_b[i].node2_base_fee;
-					var remoteFeeRate = data_b[i].node2_fee_rate;
+					var localBaseFee = data_b[i].node1BaseFee;
+					var localFeeRate = data_b[i].node1FeeRate;
+					var remoteBaseFee = data_b[i].node2BaseFee;
+					var remoteFeeRate = data_b[i].node2FeeRate;
 
-					$('#channelList').append("<div class='chanInfo w-100'><h5 style='word-break: break-all;'><a href='https://1ml.com/channel/" + data_b[i].channel_id + "' target='_blank'>" + data_b[i].channel_id + "</a></h5><h5 style='word-break: break-all;'>" + data_b[i].alias + "</h5><h6 style='word-break: break-all;'>" + data_b[i].remote_pubkey + "</h6>\
+					$('#channelList').append("<div class='chanInfo w-100'><h5 style='word-break: break-all;'><a href='https://1ml.com/channel/" + data_b[i].channelId + "' target='_blank'>" + data_b[i].channelId + "</a></h5><h5 style='word-break: break-all;'>" + data_b[i].alias + "</h5><h6 style='word-break: break-all;'>" + data_b[i].node2PubKey + "</h6>\
 					<div class='row'  style='flex-wrap:unset;'><div class='col-md-4'>base fee " + remoteBaseFee + " msat</div><div class='col-md-4' style='text-align:center;'>" + "</div><div class='col-md-4' style='text-align:right;'>base fee " + localBaseFee + " msat</div></div>\
-					<div class='row'  style='flex-wrap:unset;'><div class='col-md-4'>fee rate " + remoteFeeRate + " ppm</div><div class='col-md-4' style='text-align:center;'>" + data_b[i].capacity + " sats</div><div class='col-md-4' style='text-align:right;'>fee rate " + localFeeRate + " ppm</div></div>\
+					<div class='row'  style='flex-wrap:unset;'><div class='col-md-4'>fee rate " + remoteFeeRate + " ppm</div><div class='col-md-4' style='text-align:center;'>" + sat2Str(data_b[i].capacity) + " sats</div><div class='col-md-4' style='text-align:right;'>fee rate " + localFeeRate + " ppm</div></div>\
 					<div class='progress mb-4' id='barAll_" + i + "' style='margin-bottom:0.3rem !important'>\
 					<div class='progress-bar bg-primary' id='barRemote_" + i + "' role='progressbar' style='width: 100%' aria-valuenow='100' aria-valuemin='0' aria-valuemax='100'></div>\
 					</div></a>\
 					<div style='text-align:center;'><button type='button' class='btn btn-secondary' id='bodyBtn_" + i + "'>balance</button></div>\
 					<div class='row'><div class='col-md-6'><div id='remoteBal_" + i + "'></div></div><div class='col-md-6' style='text-align:right;'><div id='localBal_" + i + "'></div></div></div>\
-					<input type='hidden' id='keys_" + i + "' value='" + data_b[i].channel_id + "," + i + "'><br>");
+					<input type='hidden' id='keys_" + i + "' value='" + data_b[i].channelId + "," + i + "'><br>");
 				}
 				$('#channelSum').text(channels);
 				$('#capacitySum').text(sat2btc(capacity) + " BTC");

@@ -72,7 +72,7 @@ class Channel(Base):
         self.node2_base_fee = node2_base_fee
         self.node2_fee_rate = node2_fee_rate
 
-def getInfo():
+def getInfo(engine):
 
     Session = sessionmaker()
     Session.configure(bind=engine)
@@ -87,7 +87,7 @@ def getInfo():
     s.add(info)
     s.commit()
 
-def getChannels():
+def getChannels(engine):
 
     Session = sessionmaker()
     Session.configure(bind=engine)
@@ -139,11 +139,16 @@ def getChannels():
                 s.add(channel)
     s.commit()
 
-if __name__ == '__main__':
+def batch():
     db_filename = 'sqlite:///' + os.path.join('./graph.db')
-
     engine = create_engine(db_filename, echo=True)
     Base.metadata.create_all(engine)
+    getInfo(engine)
+    getChannels(engine)
 
-    getChannels()
-    getInfo()
+if __name__ == "__main__":
+    db_filename = 'sqlite:///' + os.path.join('./graph.db')
+    engine = create_engine(db_filename, echo=True)
+    Base.metadata.create_all(engine)
+    getInfo(engine)
+    getChannels(engine)

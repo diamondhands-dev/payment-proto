@@ -44,7 +44,7 @@ class Channel(Base):
 def debug(message):
     sys.stderr.write(message + "\n")
 
-def getInfo(engine, lnd):
+def storeInfo(engine, lnd):
 
     my_node_id = lnd.get_info().identity_pubkey
     my_alias = lnd.get_info().alias
@@ -62,7 +62,7 @@ def getInfo(engine, lnd):
     s.add(info)
     s.commit()
 
-def getChannels(engine, lnd):
+def storeChannels(engine, lnd):
 
     Session = sessionmaker()
     Session.configure(bind=engine)
@@ -109,7 +109,7 @@ def getChannels(engine, lnd):
                 s.add(channel)
     s.commit()
 
-def batch():
+def main():
     lnd = Lnd()
     if not lnd.valid:
         debug("Could not connect to gRPC endpoint")
@@ -118,18 +118,8 @@ def batch():
     db_filename = 'sqlite:///' + os.path.join('./graph.db')
     engine = create_engine(db_filename, echo=True)
     Base.metadata.create_all(engine)
-    getInfo(engine, lnd)
-    getChannels(engine, lnd)
+    storeInfo(engine, lnd)
+    storeChannels(engine, lnd)
 
 if __name__ == "__main__":
-    lnd = Lnd()
-    if not lnd.valid:
-        debug("Could not connect to gRPC endpoint")
-        sys.exit(1)
-
-    db_filename = 'sqlite:///' + os.path.join('./graph.db')
-    engine = create_engine(db_filename, echo=True)
-    Base.metadata.create_all(engine)
-    
-    getInfo(engine, lnd)
-    getChannels(engine, lnd)
+    main()

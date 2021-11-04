@@ -123,7 +123,7 @@ def server_error(err):
 
 from apscheduler.schedulers.background import BackgroundScheduler
 sched = BackgroundScheduler(daemon=True)
-sched.add_job(channel.batch,'interval',hours=24) #next_run_time=datetime.now()
+sched.add_job(channel.main,'interval',hours=24) #next_run_time=datetime.now()
 sched.start()
 
 if __name__ == '__main__':

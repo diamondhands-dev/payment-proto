@@ -81,7 +81,6 @@ def getChannels(engine, lnd):
 
             if (chan.channel_id not in my_channels):
                 continue
-            print(chan.node1_pub + ' if ' + lnd.get_info().identity_pubkey)
             if(chan.node1_pub == lnd.get_info().identity_pubkey):
                 channel = Channel(
                                 chan.channel_id,
@@ -111,6 +110,11 @@ def getChannels(engine, lnd):
     s.commit()
 
 def batch():
+    lnd = Lnd()
+    if not lnd.valid:
+        debug("Could not connect to gRPC endpoint")
+        sys.exit(1)
+
     db_filename = 'sqlite:///' + os.path.join('./graph.db')
     engine = create_engine(db_filename, echo=True)
     Base.metadata.create_all(engine)

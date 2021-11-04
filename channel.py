@@ -1,37 +1,6 @@
-from lnd_grpc import lightning_pb2 as ln
-from lnd_grpc import lightning_pb2_grpc as lnrpc
-import grpc
+from lnd import Lnd
+import sys
 import os
-import codecs
-from os.path import join, dirname
-from dotenv import load_dotenv
-from google.protobuf.json_format import MessageToDict
-
-load_dotenv(verbose=True)
-
-dotenv_path = join(dirname(__file__), '.env')
-load_dotenv(dotenv_path)
-
-os.environ["GRPC_SSL_CIPHER_SUITES"] = 'HIGH+ECDSA'
-
-def metadata_callback(context, callback):
-    callback([('macaroon', macaroon)], None)
-
-endpoint = os.getenv("LND_GRPC_ENDPOINT")
-port = int(os.getenv("LND_GRPC_PORT"))
-cert = open(os.getenv("LND_GRPC_CERT"), 'rb').read()
-with open(os.getenv("LND_GRPC_MACAROON"), 'rb') as f:
-    macaroon_bytes = f.read()
-    macaroon = codecs.encode(macaroon_bytes, 'hex')
-
-cert_creds = grpc.ssl_channel_credentials(cert)
-auth_creds = grpc.metadata_call_credentials(metadata_callback)
-combined_creds = grpc.composite_channel_credentials(cert_creds, auth_creds)
-channel = grpc.secure_channel(f"{endpoint}:{port}", combined_creds, options=[('grpc.max_receive_message_length',1024*1024*50)])
-stub = lnrpc.LightningStub(channel)
-
-my_node_id = stub.GetInfo(ln.GetInfoRequest()).identity_pubkey
-my_alias = stub.GetInfo(ln.GetInfoRequest()).alias
 
 from sqlalchemy import Column, Integer, String, DateTime, PickleType
 from sqlalchemy import create_engine
@@ -53,10 +22,10 @@ class Channel(Base):
     __tablename__ = "channel"
     channel_id = Column(Integer, primary_key=True)
     capacity = Column(Integer)
-    node1_pub = Column(String)
+    node1_pub = Column(String) # my node id
     node1_base_fee = Column(Integer)
     node1_fee_rate = Column(Integer)
-    node2_pub = Column(String)
+    node2_pub = Column(String) # remote node id
     node2_alias = Column(String)
     node2_base_fee = Column(Integer)
     node2_fee_rate = Column(Integer)
@@ -72,7 +41,13 @@ class Channel(Base):
         self.node2_base_fee = node2_base_fee
         self.node2_fee_rate = node2_fee_rate
 
-def getInfo(engine):
+def debug(message):
+    sys.stderr.write(message + "\n")
+
+def getInfo(engine, lnd):
+
+    my_node_id = lnd.get_info().identity_pubkey
+    my_alias = lnd.get_info().alias
 
     Session = sessionmaker()
     Session.configure(bind=engine)
@@ -87,7 +62,7 @@ def getInfo(engine):
     s.add(info)
     s.commit()
 
-def getChannels(engine):
+def getChannels(engine, lnd):
 
     Session = sessionmaker()
     Session.configure(bind=engine)
@@ -95,23 +70,19 @@ def getChannels(engine):
     s.query(Channel).delete()
     s.commit()
 
-    request = ln.ListChannelsRequest()
-    response = stub.ListChannels(request)
-    pubkeys = list(set([ sub.remote_pubkey for sub in response.channels ]))
-    channels = list(set([ sub.chan_id for sub in response.channels ]))
+    channels = lnd.get_channels().channels
+    pubkeys = list(set([ chan.remote_pubkey for chan in channels ]))
+    my_channels = list(set([ chan.chan_id for chan in channels ]))
 
     for i in range(len(pubkeys)):
-        
-        request2 = ln.NodeInfoRequest(
-            pub_key = pubkeys[i],
-            include_channels = True,
-        )
-        response2 = stub.GetNodeInfo(request2)
 
-        for chan in response2.channels:
-            if (chan.channel_id not in channels):
+        nodeinfo = lnd.get_nodeinfo(pubkeys[i])
+        for chan in nodeinfo.channels:
+
+            if (chan.channel_id not in my_channels):
                 continue
-            if(chan.node1_pub == my_node_id):
+            print(chan.node1_pub + ' if ' + lnd.get_info().identity_pubkey)
+            if(chan.node1_pub == lnd.get_info().identity_pubkey):
                 channel = Channel(
                                 chan.channel_id,
                                 chan.capacity,
@@ -119,12 +90,12 @@ def getChannels(engine):
                                 chan.node1_policy.fee_base_msat,
                                 chan.node1_policy.fee_rate_milli_msat,
                                 chan.node2_pub,
-                                response2.node.alias,
+                                nodeinfo.node.alias,
                                 chan.node2_policy.fee_base_msat,
                                 chan.node2_policy.fee_rate_milli_msat,
                 )
                 s.add(channel)
-            elif(chan.node2_pub == my_node_id):
+            elif(chan.node2_pub == lnd.get_info().identity_pubkey):
                 channel = Channel(
                                 chan.channel_id,
                                 chan.capacity,
@@ -132,7 +103,7 @@ def getChannels(engine):
                                 chan.node2_policy.fee_base_msat,
                                 chan.node2_policy.fee_rate_milli_msat,
                                 chan.node1_pub,
-                                response2.node.alias,
+                                nodeinfo.node.alias,
                                 chan.node1_policy.fee_base_msat,
                                 chan.node1_policy.fee_rate_milli_msat,
                 )
@@ -143,12 +114,18 @@ def batch():
     db_filename = 'sqlite:///' + os.path.join('./graph.db')
     engine = create_engine(db_filename, echo=True)
     Base.metadata.create_all(engine)
-    getInfo(engine)
-    getChannels(engine)
+    getInfo(engine, lnd)
+    getChannels(engine, lnd)
 
 if __name__ == "__main__":
+    lnd = Lnd()
+    if not lnd.valid:
+        debug("Could not connect to gRPC endpoint")
+        sys.exit(1)
+
     db_filename = 'sqlite:///' + os.path.join('./graph.db')
     engine = create_engine(db_filename, echo=True)
     Base.metadata.create_all(engine)
-    getInfo(engine)
-    getChannels(engine)
+    
+    getInfo(engine, lnd)
+    getChannels(engine, lnd)

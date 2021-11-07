@@ -1,12 +1,9 @@
 import os
 from os.path import join, dirname
-from dotenv import load_dotenv
 
-import lnd_apiweb
+from helper import Helper 
 
-load_dotenv(verbose=True)
-dotenv_path = join(dirname(__file__), '.env')
-load_dotenv(dotenv_path)
+helper = Helper()
 
 import flask
 from flask import render_template, request, send_from_directory
@@ -103,14 +100,14 @@ def req_channels():
 #インボイス発行
 @app.route('/invoice/<channel_id>')
 def req_invoice(channel_id):
-    return lnd_apiweb.createInvoice(channel_id)
+    return helper.createInvoice(channel_id)
 
 
 #支払いチェック＆バランス情報取得
 @app.route('/checkInvoice')
 @limiter.limit("20 per minute")
 def req_checkInvoice():
-    return lnd_apiweb.checkInvoice()
+    return helper.checkInvoice()
 
 
 @app.route("/favicon.ico")
@@ -126,7 +123,7 @@ def server_error(err):
 
 from apscheduler.schedulers.background import BackgroundScheduler
 sched = BackgroundScheduler(daemon=True)
-sched.add_job(channel.batch,'interval',hours=24) #next_run_time=datetime.now()
+sched.add_job(channel.main,'interval',hours=24) #next_run_time=datetime.now()
 sched.start()
 
 if __name__ == '__main__':

@@ -12,3 +12,4 @@ Image
 sqlalchemy==1.3.6
 flask-cors
 apscheduler
+tzlocal<3.0 #apschdeuler==3.x requires tzlocal<3.0

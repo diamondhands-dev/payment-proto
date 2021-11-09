@@ -9,6 +9,12 @@ import qrcode
 from io import BytesIO
 from PIL import Image
 
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+Base = declarative_base()
+import channel
+
 def debug(message):
     sys.stderr.write(message + "\n")
 
@@ -24,6 +30,34 @@ class Helper:
         img_str = base64.b64encode(buffer.getvalue()).decode("ascii")
 
         return img_str
+
+    def getInfo(self):
+        db_filename = 'sqlite:///' + os.path.join('./graph.db')
+
+        engine = create_engine(db_filename, echo=True)
+        Base.metadata.create_all(engine)
+
+        Session = sessionmaker()
+        Session.configure(bind=engine)
+        s = Session()
+        info = s.query(channel.Info).all()
+        s.close()
+
+        return info
+
+    def getChannels(self):
+        db_filename = 'sqlite:///' + os.path.join('./graph.db')
+
+        engine = create_engine(db_filename, echo=True)
+        Base.metadata.create_all(engine)
+
+        Session = sessionmaker()
+        Session.configure(bind=engine)
+        s = Session()
+        channels = s.query(channel.Channel).all()
+        s.close()
+
+        return channels
 
     #----------------------------------------------------
     #インボイス発行
@@ -92,3 +126,35 @@ class Helper:
 
         else:
             return ""
+    
+    def search(self, keyword):
+        channels = self.getChannels()
+        if not keyword:
+            result = channels
+        else:
+            result = {}
+            j = 0
+            for i in range(len(channels)):
+                alias = channels[i].node2_alias
+                if keyword in alias:
+                    result[j] = channels[i]
+                    j += 1
+
+        output = self.convertChannelsToOutput(result)
+        #output[-1] = {"keyword":keyword}
+        return output
+
+    def convertChannelsToOutput(self, channels):
+        output = {}
+        for i in range(len(channels)):
+            output[i] = {
+                "channelId": str(channels[i].channel_id),
+                "alias": channels[i].node2_alias,
+                "capacity": channels[i].capacity,
+                "node1BaseFee": channels[i].node1_base_fee,
+                "node1FeeRate": channels[i].node1_fee_rate,
+                "node2PubKey": channels[i].node2_pub,
+                "node2BaseFee": channels[i].node2_base_fee,
+                "node2FeeRate": channels[i].node2_fee_rate,
+            }
+        return output

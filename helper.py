@@ -136,7 +136,7 @@ class Helper:
             j = 0
             for i in range(len(channels)):
                 alias = channels[i].node2_alias
-                if keyword in alias:
+                if keyword.lower() in alias.lower():
                     result[j] = channels[i]
                     j += 1
 

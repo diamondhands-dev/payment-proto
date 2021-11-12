@@ -12,6 +12,12 @@ import uuid
 from datetime import timedelta, datetime
 import channel
 
+from os.path import join, dirname
+from dotenv import load_dotenv
+load_dotenv(verbose=True)
+dotenv_path = join(dirname(__file__), '.env')
+load_dotenv(dotenv_path)
+
 helper = Helper()
 app = flask.Flask(__name__, static_folder='static')
 app.config["SESSION_PERMANENT"] = False
@@ -116,8 +122,9 @@ sched.start()
 # メイン実行
 # Main
 if __name__ == '__main__':
+    port_number = os.getenv("APP_PORT_NUMBER", default=8810)
     app.config['SECRET_KEY'] = os.getenv(
         "REQUEST_INVOICE_SECRET",
         default=uuid.uuid4())
     app.debug = True
-    app.run(host='0.0.0.0', port=8810)
+    app.run(host='0.0.0.0', port=port_number)

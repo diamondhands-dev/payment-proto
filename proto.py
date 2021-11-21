@@ -104,10 +104,10 @@ def req_invoice(channel_id):
 
 
 #支払いチェック＆バランス情報取得
-@app.route('/checkInvoice')
+@app.route('/checkInvoice/<channel_id>/<payment_hash>')
 @limiter.limit("20 per minute")
-def req_checkInvoice():
-    return helper.checkInvoice()
+def req_checkInvoice(channel_id, payment_hash):
+    return helper.checkInvoice(channel_id, payment_hash)
 
 
 @app.route("/favicon.ico")

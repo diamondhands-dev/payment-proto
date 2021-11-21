@@ -100,7 +100,7 @@ def req_invoice(channel_id):
 # Check if invoice paid & get channel balance info
 @app.route('/checkInvoice')
 @app.route('/checkInvoice/')
-def req_invoice_blank():
+def req_checkInvoice_blank():
     # Parameter Missing
     return '{}'
 

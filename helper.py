@@ -64,9 +64,6 @@ class Helper:
     #----------------------------------------------------
     def createInvoice(self, channel_id):
 
-        #channel_idセションセット
-        session["channel_id"] = channel_id
-
         amount = 150
         description = "Peek DH channel_id: " + str(channel_id)
 
@@ -74,17 +71,17 @@ class Helper:
         img = qrcode.make(response.payment_request)
         imgStr = "data:image/jpeg;base64," + self.pil_to_base64(img)
 
-        #payment_hashセションセット
-        session["payment_hash"] = response.r_hash.hex()
-
         resCreateInvoice = {
             "bolt11": response.payment_request,
             "qrStr": imgStr,
+            "paymentHash": response.r_hash.hex(),
         }
 
+        #セキュリティセションセット
+        session[str(channel_id)] = response.r_hash.hex()
+
         #debug
-        print("channel_id1:" + session["channel_id"])
-        print("payment_hash1:" + session["payment_hash"])
+        print("payment_hash1:" + session[str(channel_id)])
 
         return resCreateInvoice
 
@@ -92,17 +89,25 @@ class Helper:
     #----------------------------------------------------
     #支払い確認＆ノードバランス取得
     #----------------------------------------------------
-    def checkInvoice(self):
+    def checkInvoice(self, channel_id, payment_hash):
         debug('checkInvoice...')
 
-        response = self.lnd.get_lookupinvoice(session["payment_hash"])
+        #セキュリティセションチェック
+        try:
+            session[str(channel_id)]
+        except:
+            return "PAYMENT UNMATCH ERROR"
+    
+        if session[str(channel_id)] != payment_hash:
+            return "PAYMENT UNMATCH ERROR"
+        
+        response = self.lnd.get_lookupinvoice(payment_hash)
 
         if(response.state == 1):
-
             response2 = self.lnd.get_channels()
 
             for i in range(len(response2.channels)):
-                if(str(response2.channels[i].chan_id) == session["channel_id"]):
+                if(str(response2.channels[i].chan_id) == channel_id):
                     resCheckInvoice = {
                         "capacity": response2.channels[i].capacity,
                         "localBalance": response2.channels[i].local_balance,
@@ -110,16 +115,13 @@ class Helper:
                     }
 
                     #debug
-                    print("channel_id2:" + session["channel_id"])
-                    print("payment_hash2:" + session["payment_hash"])
+                    print("payment_hash2:" + session[str(channel_id)])
 
                     #全セション変数クリア
-                    session["channel_id"] = ""
-                    session["payment_hash"] = ""
+                    session.pop(str(channel_id), None)
 
                     #debug
-                    print("channel_id3:" + session["channel_id"])
-                    print("payment_hash3:" + session["payment_hash"])
+                    print("payment_hash3:" + session[str(channel_id)])
                     return resCheckInvoice
 
             return "ERROR"

@@ -76,6 +76,7 @@ def req_channels():
 @app.route('/search')
 @app.route('/search/')
 def req_search_blank():
+    # Parameter Missing
     return helper.search('')
 
 @app.route('/search/<keyword>')
@@ -87,18 +88,26 @@ def req_search(keyword):
 @app.route('/invoice')
 @app.route('/invoice/')
 def req_invoice_blank():
+    # Parameter Missing
     return '{}'
 
 @app.route('/invoice/<channel_id>')
 def req_invoice(channel_id):
     return helper.createInvoice(channel_id)
 
-# 支払いチェック＆バランス情報取得
+
+#支払いチェック＆バランス情報取得
 # Check if invoice paid & get channel balance info
 @app.route('/checkInvoice')
+@app.route('/checkInvoice/')
+def req_invoice_blank():
+    # Parameter Missing
+    return '{}'
+
+@app.route('/checkInvoice/<channel_id>/<payment_hash>')
 @limiter.limit("20 per minute")
-def req_checkInvoice():
-    return helper.checkInvoice()
+def req_checkInvoice(channel_id, payment_hash):
+    return helper.checkInvoice(channel_id, payment_hash)
 
 # その他
 # Others

@@ -96,10 +96,10 @@ class Helper:
         try:
             session[str(channel_id)]
         except:
-            return "PAYMENT UNMATCH ERROR"
+            return "PAYMENT UNMATCH ERROR: Session data does not exist."
     
         if session[str(channel_id)] != payment_hash:
-            return "PAYMENT UNMATCH ERROR"
+            return "PAYMENT UNMATCH ERROR: Payment Hash does not match with session data."
         
         response = self.lnd.get_lookupinvoice(payment_hash)
 
@@ -118,7 +118,7 @@ class Helper:
                     print("payment_hash2:" + session[str(channel_id)])
 
                     #全セション変数クリア
-                    session.pop(str(channel_id), None)
+                    #session.pop(str(channel_id), None)
 
                     #debug
                     print("payment_hash3:" + session[str(channel_id)])

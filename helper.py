@@ -3,7 +3,6 @@ import sys
 
 import os
 from os.path import join, dirname
-from flask import session
 import base64
 import qrcode
 from io import BytesIO
@@ -91,9 +90,6 @@ class Helper:
             "description": description,
         }
 
-        #セキュリティセションセット
-        session[str(channel_id)] = response.r_hash.hex()
-
         #debug
         print("payment_hash: " + response.r_hash.hex())
         print("amount: " + str(amount))
@@ -109,15 +105,6 @@ class Helper:
         debug('checkInvoice...')
         resCheckInvoice = ""
 
-        #セキュリティセションチェック
-        #try:
-        #    session[str(channel_id)]
-        #except:
-        #    return "PAYMENT UNMATCH ERROR: Session data does not exist."
-    
-        #if session[str(channel_id)] != payment_hash:
-            #return "PAYMENT UNMATCH ERROR: Payment Hash does not match with session data."
-        
         # Validate Input
         if not channel_id:
             return "ERROR: Missing channel_id"
@@ -136,23 +123,16 @@ class Helper:
             for i in range(len(response2.channels)):
                 if(str(response2.channels[i].chan_id) == channel_id):
                     resCheckInvoice = {
-                        "paymentStatus": lnd_result,
-                        "lndResponse": lnd_result,
+                        "payment_status": lnd_result,
+                        "lnd_response": lnd_result,
                         "capacity": response2.channels[i].capacity,
                         "localBalance": response2.channels[i].local_balance,
                         "remoteBalance": response2.channels[i].remote_balance,
                     }
 
                     #debug
-                    print("Payment Status: Success")
                     print("payment_hash:" + payment_hash)
-                    print("channel_id: " + channel_id)
 
-                    #全セション変数クリア
-                    #session.pop(str(channel_id), None)
-
-                    #debug
-                    #print("payment_hash3:" + payment_hash)
                     return resCheckInvoice
 
             resCheckInvoice = "ERROR: channel_id Not Found"

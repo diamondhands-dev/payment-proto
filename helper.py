@@ -74,7 +74,7 @@ class Helper:
         try:
             amount = int(os.getenv("PRICE", default=DEFAULT_PRICE))
         except:
-            "ERROR: Could not set Amount"
+            return "ERROR: Could not set Amount"
 
         description = "DH Channel Explorer for channel_id: " + str(channel_id)
 
@@ -123,8 +123,8 @@ class Helper:
             for i in range(len(response2.channels)):
                 if(str(response2.channels[i].chan_id) == channel_id):
                     resCheckInvoice = {
-                        "payment_status": lnd_result,
-                        "lnd_response": lnd_result,
+                        "paymentStatus": lnd_result,
+                        "lndResponse": lnd_result,
                         "capacity": response2.channels[i].capacity,
                         "localBalance": response2.channels[i].local_balance,
                         "remoteBalance": response2.channels[i].remote_balance,

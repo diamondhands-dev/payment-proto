@@ -72,9 +72,12 @@ class Helper:
     #----------------------------------------------------
     def createInvoice(self, channel_id):
 
-        #amount = os.getenv("PRICE", default=DEFAULT_PRICE)
-        amount = 15 
-        description = "Peek DH channel_id: " + str(channel_id)
+        try:
+            amount = int(os.getenv("PRICE", default=DEFAULT_PRICE))
+        except:
+            "ERROR: Could not set Amount"
+
+        description = "DH Channel Explorer for channel_id: " + str(channel_id)
 
         response = self.lnd.get_invoice(amount, description)
         img = qrcode.make(response.payment_request)
@@ -84,13 +87,17 @@ class Helper:
             "bolt11": response.payment_request,
             "qrStr": imgStr,
             "paymentHash": response.r_hash.hex(),
+            "amount": amount,
+            "description": description,
         }
 
         #セキュリティセションセット
         session[str(channel_id)] = response.r_hash.hex()
 
         #debug
-        print("payment_hash1:" + session[str(channel_id)])
+        print("payment_hash: " + response.r_hash.hex())
+        print("amount: " + str(amount))
+        print("description: " + description)
 
         return resCreateInvoice
 
@@ -129,15 +136,17 @@ class Helper:
             for i in range(len(response2.channels)):
                 if(str(response2.channels[i].chan_id) == channel_id):
                     resCheckInvoice = {
-                        "payment_status": lnd_result,
-                        "lnd_response": lnd_result,
+                        "paymentStatus": lnd_result,
+                        "lndResponse": lnd_result,
                         "capacity": response2.channels[i].capacity,
                         "localBalance": response2.channels[i].local_balance,
                         "remoteBalance": response2.channels[i].remote_balance,
                     }
 
                     #debug
+                    print("Payment Status: Success")
                     print("payment_hash:" + payment_hash)
+                    print("channel_id: " + channel_id)
 
                     #全セション変数クリア
                     #session.pop(str(channel_id), None)
@@ -146,16 +155,21 @@ class Helper:
                     #print("payment_hash3:" + payment_hash)
                     return resCheckInvoice
 
-            return "ERROR: channel_id Not Found"
+            resCheckInvoice = "ERROR: channel_id Not Found"
+            #debug
+            print(resCheckInvoice)
+            return resCheckInvoice
 
         else:
             resCheckInvoice = {
-                    "payment_status": 0,
-                    "lnd_response": lnd_result,
+                    "paymentStatus": 0,
+                    "lndResponse": lnd_result,
                     "capacity": 0,
                     "localBalance": 0,
                     "remoteBalance": 0,
                     }
+            #debug
+            print("Payment Status: Not Paid")
 
         return resCheckInvoice
     

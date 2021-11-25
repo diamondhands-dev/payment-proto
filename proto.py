@@ -132,9 +132,18 @@ sched.start()
 # メイン実行
 # Main
 if __name__ == '__main__':
-    port_number = os.getenv("APP_PORT_NUMBER", default=8810)
+    port_number = os.getenv("FLASK_PORT_NUMBER", default=8810)
+    crt_file = os.getenv("FLASK_SSL_CERTFILE", default=None)
+    key_file = os.getenv("FLASK_SSL_KEYFILE", default=None)
+
     app.config['SECRET_KEY'] = os.getenv(
         "REQUEST_INVOICE_SECRET",
         default=uuid.uuid4())
     app.debug = True
-    app.run(host='0.0.0.0', port=port_number)
+    
+    if crt_file and key_file:
+        context = (crt_file, key_file)
+        app.run(host='0.0.0.0', port=port_number, ssl_context=context)
+    else:
+        app.run(host='0.0.0.0', port=port_number)
+

@@ -216,7 +216,7 @@
 		function requestStatus(idx, channel_id, payment_hash){
 			$.get('/checkInvoice/' + channel_id + '/' + payment_hash)
 				.done(function(data_d){
-					if(data_d != ""){
+					if(data_d != "" && data_d.paymentStatus == "1"){
 						clearInterval(timer);
 						$('.js-modal').fadeOut();
 						var remoteShare = 0;

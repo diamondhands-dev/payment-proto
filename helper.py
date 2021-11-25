@@ -131,6 +131,7 @@ class Helper:
                     }
 
                     #debug
+                    print("Payment Status: Paid")
                     print("payment_hash:" + payment_hash)
 
                     return resCheckInvoice
@@ -144,9 +145,9 @@ class Helper:
             resCheckInvoice = {
                     "paymentStatus": 0,
                     "lndResponse": lnd_result,
-                    "capacity": 0,
-                    "localBalance": 0,
-                    "remoteBalance": 0,
+                    #"capacity": 0,
+                    #"localBalance": 0,
+                    #"remoteBalance": 0,
                     }
             #debug
             print("Payment Status: Not Paid")

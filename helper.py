@@ -163,12 +163,12 @@ class Helper:
             j = 0
             for i in range(len(channels)):
                 alias = channels[i].node2_alias
-                if keyword.lower() in alias.lower():
+                pubKey = channels[i].node2_pub
+                if keyword.lower() in alias.lower() or keyword == pubKey:
                     result[j] = channels[i]
                     j += 1
 
         output = self.convertChannelsToOutput(result)
-        #output[-1] = {"keyword":keyword}
         return output
 
     def convertChannelsToOutput(self, channels):

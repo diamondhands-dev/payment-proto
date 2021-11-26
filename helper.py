@@ -107,20 +107,15 @@ class Helper:
         resCheckInvoice = ""
 
         # Validate Input
-        #if not channel_id:
-            #return "ERROR: Missing channel_id"
         if not payment_hash:
             return "ERROR: Missing payment_hash"
 
         try:
             response = self.lnd.get_lookupinvoice(payment_hash)
             lnd_result = response.state
-            #channel_id = response.memo
-            #channel_id = response.memo.removeprefix(INVOICE_MEMO_PREFIX)
-            print("Memo: " + response.memo)
             channel_id = response.memo[len(INVOICE_MEMO_PREFIX):]
+            print("Invoice Memo: " + response.memo)
             print("Channel_id: " + channel_id)
-            
         except:
             lnd_result = "ERROR: No such payment_hash"
             print(lnd_result)

@@ -1,4 +1,6 @@
-# Peeking channel info Server
+# Lightning Channel Explorer Server
+
+by Diamond Hands
 
 This service allows the LN node operator to sell channel information.
 

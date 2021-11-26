@@ -21,6 +21,7 @@ dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
 
 DEFAULT_PRICE = 150
+INVOICE_MEMO_PREFIX = "DH Channel Explorer for channel_id: "
 
 def debug(message):
     sys.stderr.write(message + "\n")
@@ -76,7 +77,7 @@ class Helper:
         except:
             return "ERROR: Could not set Amount"
 
-        description = "DH Channel Explorer for channel_id: " + str(channel_id)
+        description = INVOICE_MEMO_PREFIX + str(channel_id)
 
         response = self.lnd.get_invoice(amount, description)
         img = qrcode.make(response.payment_request)
@@ -101,21 +102,28 @@ class Helper:
     #----------------------------------------------------
     #支払い確認＆ノードバランス取得
     #----------------------------------------------------
-    def checkInvoice(self, channel_id="", payment_hash=""):
+    def checkInvoice(self, payment_hash=""):
         debug('checkInvoice...')
         resCheckInvoice = ""
 
         # Validate Input
-        if not channel_id:
-            return "ERROR: Missing channel_id"
+        #if not channel_id:
+            #return "ERROR: Missing channel_id"
         if not payment_hash:
             return "ERROR: Missing payment_hash"
 
         try:
             response = self.lnd.get_lookupinvoice(payment_hash)
             lnd_result = response.state
+            #channel_id = response.memo
+            #channel_id = response.memo.removeprefix(INVOICE_MEMO_PREFIX)
+            print("Memo: " + response.memo)
+            channel_id = response.memo[len(INVOICE_MEMO_PREFIX):]
+            print("Channel_id: " + channel_id)
+            
         except:
             lnd_result = "ERROR: No such payment_hash"
+            print(lnd_result)
 
         if(lnd_result == 1):
             response2 = self.lnd.get_channels()

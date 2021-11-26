@@ -17,7 +17,7 @@ Copy and rename `.env.example` file to `.env`.
 $ cp .env.example .env
 ```
 
-Set configuration for your LND as follows.
+Set configuration for your LND and application as follows.
 ```
 LND_GRPC_ENDPOINT=127.0.0.1
 LND_GRPC_PORT=10009

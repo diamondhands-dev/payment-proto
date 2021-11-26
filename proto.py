@@ -1,10 +1,6 @@
 import os
 from os.path import join, dirname
-
 from helper import Helper 
-
-helper = Helper()
-
 import flask
 from flask import render_template, request, send_from_directory
 from flask import Flask, session
@@ -14,14 +10,15 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import uuid
 from datetime import timedelta, datetime
-
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-Base = declarative_base()
 import channel
 
+from os.path import join, dirname
+from dotenv import load_dotenv
+load_dotenv(verbose=True)
+dotenv_path = join(dirname(__file__), '.env')
+load_dotenv(dotenv_path)
 
+helper = Helper()
 app = flask.Flask(__name__, static_folder='static')
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
@@ -34,101 +31,119 @@ limiter = Limiter(
 )
 CORS(app)
 
+# デフォルトトップページ
+# Get default top page
 @app.route('/')
 def home():
     return render_template("index.html")
 
-
-#デフォルト情報１取得
+# 自ノード情報取得
+# Get self node info
 @app.route('/self')
 def req_self():
     print('requesting my node info ...')
 
-    db_filename = 'sqlite:///' + os.path.join('./graph.db')
+    info = helper.getInfo()
+    channels = helper.getChannels()
 
-    engine = create_engine(db_filename, echo=True)
-    Base.metadata.create_all(engine)
-
-    Session = sessionmaker()
-    Session.configure(bind=engine)
-    s = Session()
-    info = s.query(channel.Info).all()
+    capacitySum = 0
+    channelCount = len(channels)
+    for i in range(channelCount):
+        capacitySum += channels[i].capacity
 
     output = {
         "alias": info[0].alias,
         "publicKey": info[0].identity_pubkey,
+        "channelCount": channelCount,
+        "capacitySum": capacitySum,
     }
 
-    s.close()
     return output
 
-
-#デフォルト情報２取得
+# 全チャネル情報取得
+# Get all channels info
 @app.route('/channels')
 def req_channels():
     print('requesting channels...')
 
-    db_filename = 'sqlite:///' + os.path.join('./graph.db')
+    channels = helper.getChannels()
+    output = helper.convertChannelsToOutput(channels)
 
-    engine = create_engine(db_filename, echo=True)
-    Base.metadata.create_all(engine)
+    return output
 
-    Session = sessionmaker()
-    Session.configure(bind=engine)
-    s = Session()
-    channels = s.query(channel.Channel).all()
-    
-    output = {}
-    for i in range(len(channels)):
-        output[i] = {
-            "channelId": str(channels[i].channel_id),
-            "alias": channels[i].node2_alias,
-            "capacity": channels[i].capacity,
-            #"remotePubKey": channels[i].node2_pub,
-            #"node1PubKey": channels[i].node1_pub,
-            "node1BaseFee": channels[i].node1_base_fee,
-            "node1FeeRate": channels[i].node1_fee_rate,
-            "node2PubKey": channels[i].node2_pub,
-            "node2BaseFee": channels[i].node2_base_fee,
-            "node2FeeRate": channels[i].node2_fee_rate,
-        }
-    s.close()
-    return output 
+# 検索機能
+# Search Functionality
+@app.route('/search')
+@app.route('/search/')
+def req_search_blank():
+    # Parameter Missing
+    return helper.search('')
 
+@app.route('/search/<keyword>')
+def req_search(keyword):
+    return helper.search(keyword)
 
+# インボイス発行
+# Issue invoice
+@app.route('/invoice')
+@app.route('/invoice/')
+def req_invoice_blank():
+    # Parameter Missing
+    return '{}'
 
-#インボイス発行
 @app.route('/invoice/<channel_id>')
 def req_invoice(channel_id):
     return helper.createInvoice(channel_id)
 
 
 #支払いチェック＆バランス情報取得
+# Check if invoice paid & get channel balance info
+@app.route('/checkInvoice')
+@app.route('/checkInvoice/')
+#def req_checkInvoice_blank():
+#    Parameter Missing
+#    return '{}'
+@app.route('/checkInvoice/<channel_id>')
+@app.route('/checkInvoice/<channel_id>/')
 @app.route('/checkInvoice/<channel_id>/<payment_hash>')
 @limiter.limit("20 per minute")
-def req_checkInvoice(channel_id, payment_hash):
+def req_checkInvoice(channel_id="", payment_hash=""):
     return helper.checkInvoice(channel_id, payment_hash)
 
-
+# その他
+# Others
 @app.route("/favicon.ico")
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static/img'),
                                'favicon.ico', mimetype='image/vnd.microsoft.icon')
-
 
 @app.errorhandler(Exception)
 def server_error(err):
     print(err)
     return "Some general exception", 500
 
+# バッチスケジュール実行
+# Set batch schedule
 from apscheduler.schedulers.background import BackgroundScheduler
 sched = BackgroundScheduler(daemon=True)
 sched.add_job(channel.main,'interval',hours=24) #next_run_time=datetime.now()
 sched.start()
 
+# メイン実行
+# Main
 if __name__ == '__main__':
+    port_number = os.getenv("FLASK_PORT_NUMBER", default=8810)
+    crt_file = os.getenv("FLASK_SSL_CERTFILE", default=None)
+    key_file = os.getenv("FLASK_SSL_KEYFILE", default=None)
+
     app.config['SECRET_KEY'] = os.getenv(
         "REQUEST_INVOICE_SECRET",
         default=uuid.uuid4())
     app.debug = True
-    app.run(host='0.0.0.0', port=8810)
+    
+    if crt_file and key_file:
+        context = (crt_file, key_file)
+        app.run(host='0.0.0.0', port=port_number, ssl_context=context)
+    else:
+        app.run(host='0.0.0.0', port=port_number)
+

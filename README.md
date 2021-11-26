@@ -32,15 +32,19 @@ PRICE=price_per_channel_in_sats_default_is_150
 Run the database creation/update program at least once before you run proto.py for the first time
 ```
 $ python3 channel.py
-$ python3 proto.py
 ```
 
+Run the main program
+```
+$ python3 proto.py
+```
 or to run in the background
 ```
 $ nohup python3 proto.py &
 ```
 
-If you have set FLASK_SSL_CERTFILE and FLASK_SSL_KEYFILE then go to https://localhost:8810
+If you have set `FLASK_SSL_CERTFILE` and `FLASK_SSL_KEYFILE` then go to https://localhost:8810
+
 If not, go to http://localhost:8810
 
 If the channel info seems incorrect, you may want to run the command below to update the database manually.

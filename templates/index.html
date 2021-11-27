@@ -205,7 +205,7 @@
 					$('#qrImg').attr("src", data_c.qrStr);
 					$('#invoice').attr("href", "lightning:" + data_c.bolt11);
 					
-					timer = setInterval(requestStatus, 4000, bdyIdx, channel_id, data_c.paymentHash);
+					timer = setInterval(requestStatus, 4000, bdyIdx, data_c.paymentHash);
 				})
 				.fail(function( errorThrown ) {
 					$('#ftco-loader').removeClass('show');
@@ -213,8 +213,8 @@
 			;
 		}
         
-		function requestStatus(idx, channel_id, payment_hash){
-			$.get('/checkInvoice/' + channel_id + '/' + payment_hash)
+		function requestStatus(idx, payment_hash){
+			$.get('/checkInvoice/' + payment_hash)
 				.done(function(data_d){
 					if(data_d != "" && data_d.paymentStatus == "1"){
 						clearInterval(timer);

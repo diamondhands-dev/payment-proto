@@ -100,15 +100,10 @@ def req_invoice(channel_id):
 # Check if invoice paid & get channel balance info
 @app.route('/checkInvoice')
 @app.route('/checkInvoice/')
-#def req_checkInvoice_blank():
-#    Parameter Missing
-#    return '{}'
-@app.route('/checkInvoice/<channel_id>')
-@app.route('/checkInvoice/<channel_id>/')
-@app.route('/checkInvoice/<channel_id>/<payment_hash>')
+@app.route('/checkInvoice/<payment_hash>')
 @limiter.limit("20 per minute")
-def req_checkInvoice(channel_id="", payment_hash=""):
-    return helper.checkInvoice(channel_id, payment_hash)
+def req_checkInvoice(payment_hash=""):
+    return helper.checkInvoice(payment_hash)
 
 # その他
 # Others

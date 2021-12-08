@@ -66,22 +66,23 @@ def req_self():
 def req_channels():
     print('requesting channels...')
 
-    channels = helper.getChannels()
-    output = helper.convertChannelsToOutput(channels)
-
-    return output
+#    channels = helper.getChannels()
+#    output = helper.convertChannelsToOutput(channels)
+#    return output
+    return helper.search()
 
 # 検索機能
 # Search Functionality
 @app.route('/search')
 @app.route('/search/')
-def req_search_blank():
+#def req_search_blank():
     # Parameter Missing
-    return helper.search('')
-
+#    return helper.search('')
 @app.route('/search/<keyword>')
-def req_search(keyword):
-    return helper.search(keyword)
+def req_search(keyword=None):
+    channelCount = request.args.get('channelCount')
+    page = request.args.get('page')
+    return helper.search(keyword, channelCount, page)
 
 # インボイス発行
 # Issue invoice

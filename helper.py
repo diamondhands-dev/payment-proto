@@ -9,6 +9,7 @@ from io import BytesIO
 from PIL import Image
 
 from sqlalchemy import create_engine
+from sqlalchemy import or_
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 Base = declarative_base()
@@ -22,6 +23,7 @@ load_dotenv(dotenv_path)
 
 DEFAULT_PRICE = 150
 INVOICE_MEMO_PREFIX = "DH Channel Explorer for channel_id: "
+DEFAULT_CHANNELCOUNT = 10
 
 def debug(message):
     sys.stderr.write(message + "\n")
@@ -53,7 +55,7 @@ class Helper:
 
         return info
 
-    def getChannels(self):
+    def getChannels(self, keyword=None, channelCount=None, page=None):
         db_filename = 'sqlite:///' + os.path.join('./graph.db')
 
         engine = create_engine(db_filename, echo=True)
@@ -62,10 +64,32 @@ class Helper:
         Session = sessionmaker()
         Session.configure(bind=engine)
         s = Session()
-        channels = s.query(channel.Channel).all()
+        q = s.query(channel.Channel).order_by(channel.Channel.channel_id)
+        if keyword:
+            q = q.filter(or_(channel.Channel.node2_alias.ilike(f"%{keyword}%"), channel.Channel.node2_pub == keyword))
+        if channelCount and page:
+            page = page - 1
+            sliceStart = channelCount * page
+            sliceEnd = sliceStart + channelCount
+            q = q.slice(sliceStart, sliceEnd)
+        channels = q.all()
         s.close()
 
         return channels
+
+    def getChannelTotalCount(self):
+        db_filename = 'sqlite:///' + os.path.join('./graph.db')
+
+        engine = create_engine(db_filename, echo=True)
+        Base.metadata.create_all(engine)
+
+        Session = sessionmaker()
+        Session.configure(bind=engine)
+        s = Session()
+        count = s.query(channel.Channel).count()
+        s.close()
+
+        return count
 
     #----------------------------------------------------
     #インボイス発行
@@ -148,43 +172,54 @@ class Helper:
             resCheckInvoice = {
                     "paymentStatus": 0,
                     "lndResponse": lnd_result,
-                    #"capacity": 0,
-                    #"localBalance": 0,
-                    #"remoteBalance": 0,
                     }
             #debug
             debug("Payment Status: Not Paid")
 
         return resCheckInvoice
     
-    def search(self, keyword):
-        channels = self.getChannels()
-        if not keyword:
-            result = channels
-        else:
-            result = {}
-            j = 0
-            for i in range(len(channels)):
-                alias = channels[i].node2_alias
-                pubKey = channels[i].node2_pub
-                if keyword.lower() in alias.lower() or keyword == pubKey:
-                    result[j] = channels[i]
-                    j += 1
+    def search(self, keyword=None, channelCount=None, page=None):
 
-        output = self.convertChannelsToOutput(result)
-        return output
+        if channelCount or page:
+            if channelCount:
+                try:
+                    channelCount = int(channelCount)
+                    if channelCount < 1: raise
+                except:
+                    channelCount = DEFAULT_CHANNELCOUNT
+            else:
+                channelCount = DEFAULT_CHANNELCOUNT
+        
+            if page:
+                try:
+                    page = int(page)
+                    if page < 1: raise
+                except:
+                    page = 1
+            else:
+                page = 1
 
-    def convertChannelsToOutput(self, channels):
+        channels = self.getChannels(keyword, channelCount, page)
+        channelTotal = self.getChannelTotalCount()
         output = {}
-        for i in range(len(channels)):
-            output[i] = {
-                "channelId": str(channels[i].channel_id),
-                "alias": channels[i].node2_alias,
-                "capacity": channels[i].capacity,
-                "node1BaseFee": channels[i].node1_base_fee,
-                "node1FeeRate": channels[i].node1_fee_rate,
-                "node2PubKey": channels[i].node2_pub,
-                "node2BaseFee": channels[i].node2_base_fee,
-                "node2FeeRate": channels[i].node2_fee_rate,
+        channelsArray = []
+
+        for c in channels:
+            channelsArray.append({
+                "channelId": str(c.channel_id),
+                "alias": c.node2_alias,
+                "capacity": c.capacity,
+                "node1BaseFee": c.node1_base_fee,
+                "node1FeeRate": c.node1_fee_rate,
+                "node2PubKey": c.node2_pub,
+                "node2BaseFee": c.node2_base_fee,
+                "node2FeeRate": c.node2_fee_rate,
+                })
+        
+        output = {
+            "channelCount": channelCount,
+            "channels": channelsArray,
+            "page": page,
+            "channelTotal": channelTotal,
             }
         return output
